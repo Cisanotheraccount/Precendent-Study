@@ -1,0 +1,270 @@
+{
+  "project": {
+    "title": "D3.js / Data-Driven Documents",
+    "shortTitle": "D3.js",
+    "subtitle": "Data as Interface",
+    "year": "2011",
+    "format": "Open-source JavaScript library; academic research paper; web visualization framework",
+    "primaryCreator": "Mike / Michael Bostock",
+    "paperAuthors": ["Michael Bostock", "Vadim Ogievetsky", "Jeffrey Heer"],
+    "majorContributors": ["Jason Davies", "Philippe Riviere"],
+    "doi": "10.1109/TVCG.2011.185",
+    "projectUrl": "https://d3js.org/",
+    "sourceCodeUrl": "https://github.com/d3/d3",
+    "paperUrl": "https://idl.uw.edu/papers/d3",
+    "intendedAudience": [
+      "web developers",
+      "data visualization designers",
+      "researchers",
+      "journalists",
+      "civic-data practitioners",
+      "people making custom web-based data graphics"
+    ],
+    "oneSentence": "D3.js is an open-source JavaScript library and design method for creating custom, interactive, data-driven graphics in the browser by binding data directly to web document elements.",
+    "workingThesis": "D3 changed web visualization by making data directly drive browser documents, turning the webpage into a programmable visual system rather than a static display or a fixed chart template."
+  },
+  "sections": {
+    "whyPrecedent": "D3 is a computational design precedent because it changes how visual form is produced. The designer writes relationships between data, document elements, scales, shapes, interaction, and time. The final graphic is not drawn once by hand; it is generated, updated, and transformed through code.",
+    "historicalContext": [
+      "Before D3, many web visualization tools hid the rendered graphic inside toolkit-specific abstractions. D3's original paper framed its approach as representation-transparent: instead of hiding the scenegraph, D3 lets designers inspect and manipulate the browser's native DOM.",
+      "D3 followed Protovis, an earlier JavaScript visualization toolkit associated with the Stanford Visualization Group. D3 moved away from an intermediate representation layer and toward direct manipulation of standard web documents, making custom visualization more flexible, inspectable, and compatible with ordinary web development tools."
+    ],
+    "visualLogic": "D3 does not impose one visual style. Its visual language is modular and procedural: charts, maps, networks, diagrams, dashboards, and narrative graphics are composed from primitives. Its aesthetic significance is flexibility: visual form can be custom-built for the dataset, often with animation, interaction, annotation, and responsive layout.",
+    "communityOfPractice": "D3 became important through an open-source ecosystem, not only through a single publication. Its community includes academic visualization researchers, web developers, designers, data journalists, Observable notebook users, GitHub contributors, tutorial writers, and practitioners who publish examples and reusable code.",
+    "preliminaryAssessment": "D3 gives designers direct control over how data becomes visual form in the browser. It helped bring interactive data visualization into mainstream web practice and influenced journalism, civic technology, research, and creative coding. Its weakness is the same as its strength: because it is low-level and flexible, it can be difficult for beginners and can privilege people who already understand code."
+  },
+  "methods": [
+    {
+      "name": "Data binding",
+      "does": "Connects arrays or structured data to selected DOM elements.",
+      "matters": "Makes data the driver of visual form."
+    },
+    {
+      "name": "Data join",
+      "does": "Defines enter, update, and exit states between data and visual elements.",
+      "matters": "Supports dynamic and interactive visualizations."
+    },
+    {
+      "name": "Selections",
+      "does": "Selects document elements and applies transformations.",
+      "matters": "Gives designers direct control over HTML and SVG elements."
+    },
+    {
+      "name": "Scales",
+      "does": "Maps data values to visual values such as position, size, and color.",
+      "matters": "Converts abstract data into readable visual encodings."
+    },
+    {
+      "name": "Axes",
+      "does": "Displays scale reference marks and labels.",
+      "matters": "Makes visual encodings legible."
+    },
+    {
+      "name": "Shapes",
+      "does": "Generates SVG paths for lines, areas, arcs, symbols, and links.",
+      "matters": "Turns data into geometric form."
+    },
+    {
+      "name": "Transitions",
+      "does": "Animates changes between states.",
+      "matters": "Helps viewers follow changing data."
+    },
+    {
+      "name": "Interaction modules",
+      "does": "Supports brushing, dragging, zooming, filtering, and hover states.",
+      "matters": "Makes visualization exploratory rather than static."
+    },
+    {
+      "name": "Web standards",
+      "does": "Uses HTML, SVG, CSS, Canvas, JavaScript, and the DOM.",
+      "matters": "Makes the browser the design medium."
+    }
+  ],
+  "criticalQuestions": [
+    "Who gains visual power when data visualization becomes programmable?",
+    "Who is excluded when expressive visualization requires JavaScript, browser knowledge, and data-structure knowledge?",
+    "Does D3 democratize visualization, or does it mainly empower people who already know how to code?",
+    "How does D3 change the relationship between designer, data, document, and audience?",
+    "When does flexibility become complexity?"
+  ],
+  "sourceNotes": [
+    {
+      "issue": "Creator attribution",
+      "interpretation": "The official D3 site says D3 was created by Mike Bostock in 2011 and that the D3 paper was co-authored with Jeffrey Heer and Vadim Ogievetsky. Information is Beautiful credits D3 to Mike Bostock, Jason Davies, and Philippe Riviere. This study keeps these categories separate: creator, paper authors, and major contributors."
+    },
+    {
+      "issue": "Year",
+      "interpretation": "2011 is used as the project and paper year. Several important explanatory essays were published in 2012."
+    },
+    {
+      "issue": "Format",
+      "interpretation": "The format is intentionally broad: open-source JavaScript library, research paper, and web visualization framework."
+    },
+    {
+      "issue": "Intended audience",
+      "interpretation": "Audience is inferred from official descriptions, documented use cases, source-code community, and reception in visualization practice."
+    }
+  ],
+  "sources": [
+    {
+      "id": 1,
+      "title": "D3 official site",
+      "author": "D3 / Observable",
+      "year": "Current",
+      "type": "Official project page",
+      "group": "Author / Project Sources",
+      "url": "https://d3js.org/",
+      "use": "Establishes current project identity and definition."
+    },
+    {
+      "id": 2,
+      "title": "What is D3?",
+      "author": "D3 / Observable",
+      "year": "Current",
+      "type": "Official explanation",
+      "group": "Author / Project Sources",
+      "url": "https://d3js.org/what-is-d3",
+      "use": "Confirms D3 as an open-source JavaScript library, creator history, contributors, and low-level toolbox framing."
+    },
+    {
+      "id": 3,
+      "title": "D3: Data-Driven Documents",
+      "author": "Michael Bostock, Vadim Ogievetsky, Jeffrey Heer",
+      "year": "2011",
+      "type": "Academic paper page",
+      "group": "Author / Project Sources",
+      "url": "https://idl.uw.edu/papers/d3",
+      "use": "Confirms paper title, authors, year, DOI, abstract, and original research context."
+    },
+    {
+      "id": 4,
+      "title": "Original D3 paper PDF",
+      "author": "Michael Bostock, Vadim Ogievetsky, Jeffrey Heer",
+      "year": "2011",
+      "type": "Academic paper",
+      "group": "Author / Project Sources",
+      "url": "https://idl.cs.washington.edu/files/2011-D3-InfoVis.pdf",
+      "use": "Primary source for methodology and representation-transparent argument."
+    },
+    {
+      "id": 5,
+      "title": "D3 GitHub repository",
+      "author": "D3 contributors",
+      "year": "Current",
+      "type": "Source code repository",
+      "group": "Author / Project Sources",
+      "url": "https://github.com/d3/d3",
+      "use": "Confirms open-source codebase, license, and community development."
+    },
+    {
+      "id": 6,
+      "title": "Thinking with Joins",
+      "author": "Mike Bostock",
+      "year": "2012",
+      "type": "Author essay / tutorial",
+      "group": "Author / Project Sources",
+      "url": "https://bost.ocks.org/mike/join/",
+      "use": "Explains data joins as the core conceptual method of D3."
+    },
+    {
+      "id": 7,
+      "title": "Object Constancy",
+      "author": "Mike Bostock",
+      "year": "2012",
+      "type": "Author essay / tutorial",
+      "group": "Author / Project Sources",
+      "url": "https://bost.ocks.org/mike/constancy/",
+      "use": "Explains how animation and key functions support perception and continuity."
+    },
+    {
+      "id": 8,
+      "title": "Towards Reusable Charts",
+      "author": "Mike Bostock",
+      "year": "2012",
+      "type": "Author essay / tutorial",
+      "group": "Author / Project Sources",
+      "url": "https://bost.ocks.org/mike/chart/",
+      "use": "Explains reusable chart patterns and D3 component thinking."
+    },
+    {
+      "id": 9,
+      "title": "What Makes Software Good?",
+      "author": "Mike Bostock",
+      "year": "2016",
+      "type": "Author essay",
+      "group": "Author / Project Sources",
+      "url": "https://medium.com/@mbostock/what-makes-software-good-943557f8a488",
+      "use": "Provides Bostock's design values around software, learning, and visualization."
+    },
+    {
+      "id": 10,
+      "title": "10 Years of Open-Source Visualization",
+      "author": "Mike Bostock",
+      "year": "2021",
+      "type": "Author talk / Observable notebook",
+      "group": "Author / Project Sources",
+      "url": "https://observablehq.com/@mbostock/10-years-of-open-source-visualization",
+      "use": "Provides retrospective context on D3 and open-source visualization practice."
+    },
+    {
+      "id": 11,
+      "title": "IEEE VIS 2021 Test of Time Award",
+      "author": "IEEE VIS",
+      "year": "2021",
+      "type": "Award / field recognition",
+      "group": "Sources By Others",
+      "url": "https://ieeevis.org/year/2021/info/awards/test-of-time-awards",
+      "use": "Shows D3's long-term impact in visualization research and practice."
+    },
+    {
+      "id": 12,
+      "title": "Information Is Beautiful Awards - Test of Time",
+      "author": "Marilia Ferreira da Cunha / Nightingale, Data Visualization Society",
+      "year": "2023",
+      "type": "Award article / community commentary",
+      "group": "Sources By Others",
+      "url": "https://nightingaledvs.com/information-is-beautiful-awards-test-of-time/",
+      "use": "Shows D3's influence across newsrooms, websites, portfolios, and the broader data visualization community."
+    },
+    {
+      "id": 13,
+      "title": "Information is Beautiful Awards 2022: The Winners",
+      "author": "Information is Beautiful Awards",
+      "year": "2022",
+      "type": "Award announcement",
+      "group": "Sources By Others",
+      "url": "https://www.informationisbeautifulawards.com/news/593-information-is-beautiful-awards-2022-the-winners",
+      "use": "Confirms D3 as Test of Time winner and notes alternate creator attribution."
+    },
+    {
+      "id": 14,
+      "title": "The Trouble with D3",
+      "author": "Ian Johnson",
+      "year": "2018",
+      "type": "Critique / reflection",
+      "group": "Sources By Others",
+      "url": "https://medium.com/dailyjs/the-trouble-with-d3-4a84f7de011f",
+      "use": "Supports criticism about D3's learning curve and technical barriers."
+    },
+    {
+      "id": 15,
+      "title": "PolicyViz Episode #175: Mike Bostock",
+      "author": "Jon Schwabish / PolicyViz",
+      "year": "2020",
+      "type": "Interview / podcast",
+      "group": "Sources By Others",
+      "url": "https://policyviz.com/podcast/episode-175-mike-bostock/",
+      "use": "Provides author context, D3 origins, Observable, and open-source visualization discussion."
+    },
+    {
+      "id": 16,
+      "title": "6 Reasons to Get Over Your Fear of Coding and Start Making Better Maps",
+      "author": "Wired",
+      "year": "2013",
+      "type": "Journalism / review",
+      "group": "Sources By Others",
+      "url": "https://www.wired.com/2013/12/make-better-maps-with-d3",
+      "use": "Shows D3's influence on interactive mapping and public-facing data graphics."
+    }
+  ]
+}

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>D3.js / Data-Driven Documents - Precedent Study</title>
+    <meta
+      name="description"
+      content="A precedent study datasheet for D3.js / Data-Driven Documents."
+    />
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <nav class="topbar" aria-label="Main navigation">
+        <a class="brand" href="#top">Precedent Study</a>
+        <div class="nav-links">
+          <a href="#datasheet">Datasheet</a>
+          <a href="#method">Method</a>
+          <a href="#bibliography">Sources</a>
+          <a href="#questions">Questions</a>
+        </div>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <p class="eyebrow">ARCHA4144 Methods as Practices</p>
+        <h1>D3.js / Data-Driven Documents</h1>
+        <p class="dek">
+          D3 changed web visualization by making data directly drive browser
+          documents, turning the webpage into a programmable visual system
+          rather than a static display.
+        </p>
+        <div class="hero-meta" aria-label="Project quick facts">
+          <span>Mike Bostock</span>
+          <span>2011</span>
+          <span>Open-source JavaScript library</span>
+        </div>
+      </section>
+
+      <section class="band intro-grid" aria-labelledby="argument-title">
+        <div>
+          <p class="section-kicker">Working Thesis</p>
+          <h2 id="argument-title">Data as interface</h2>
+        </div>
+        <p>
+          D3 is a computational design precedent because it changes how visual
+          form is produced. The designer writes relationships between data,
+          document elements, scales, shapes, interaction, and time. The final
+          graphic is not drawn once by hand; it is generated, updated, and
+          transformed through code.
+        </p>
+      </section>
+
+      <section class="section" id="datasheet" aria-labelledby="datasheet-title">
+        <div class="section-heading">
+          <p class="section-kicker">01 / Datasheet</p>
+          <h2 id="datasheet-title">Basic information</h2>
+        </div>
+        <div class="datasheet-grid" id="datasheet-grid"></div>
+      </section>
+
+      <section class="section split" id="method" aria-labelledby="method-title">
+        <div class="section-heading">
+          <p class="section-kicker">02 / Method</p>
+          <h2 id="method-title">From data to document</h2>
+          <p>
+            The diagram is generated with D3 from the same dataset used by this
+            page. It shows the basic chain of relationships that makes the
+            browser into a visualization medium.
+          </p>
+        </div>
+        <div class="diagram-panel">
+          <svg id="flow-diagram" role="img" aria-label="D3 method diagram"></svg>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="context-title">
+        <div class="section-heading">
+          <p class="section-kicker">03 / Context</p>
+          <h2 id="context-title">Why it matters</h2>
+        </div>
+        <div class="text-columns">
+          <article>
+            <h3>Historical and technical context</h3>
+            <p id="historical-context"></p>
+          </article>
+          <article>
+            <h3>Visual and aesthetic logic</h3>
+            <p id="visual-logic"></p>
+          </article>
+          <article>
+            <h3>Community of practice</h3>
+            <p id="community"></p>
+          </article>
+        </div>
+      </section>
+
+      <section
+        class="section"
+        id="bibliography"
+        aria-labelledby="bibliography-title"
+      >
+        <div class="section-heading">
+          <p class="section-kicker">04 / Bibliography</p>
+          <h2 id="bibliography-title">Source dataset</h2>
+          <p>
+            Sources are separated into author/project materials and sources by
+            others, matching the assignment's data collection requirement.
+          </p>
+        </div>
+        <div class="source-toolbar" aria-label="Source filters">
+          <button class="filter active" data-filter="all">All sources</button>
+          <button class="filter" data-filter="Author / Project Sources">
+            Author / Project
+          </button>
+          <button class="filter" data-filter="Sources By Others">
+            Others / Critique
+          </button>
+        </div>
+        <div class="source-list" id="source-list"></div>
+      </section>
+
+      <section class="section split" id="questions" aria-labelledby="questions-title">
+        <div class="section-heading">
+          <p class="section-kicker">05 / Critical Frame</p>
+          <h2 id="questions-title">Questions for analysis</h2>
+        </div>
+        <ul class="question-list" id="question-list"></ul>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>
+        D3.js precedent study dataset. Prepared for ARCHA4144 Methods as
+        Practices.
+      </p>
+      <a href="data/d3-datasheet.json">View structured dataset</a>
+    </footer>
+
+    <script src="scripts/main.js"></script>
+  </body>
+</html>
