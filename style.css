@@ -1,0 +1,127 @@
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: #f7f7f7;
+  color: #111;
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 40px;
+  border-bottom: 1px solid #ccc;
+  font-size: 14px;
+  background-color: white;
+}
+
+header .left {
+  color: #777;
+}
+
+header .center {
+  text-align: center;
+  font-weight: 400;
+}
+
+header .center span {
+  font-size: 12px;
+  color: #777;
+}
+
+header .right a {
+  color: #111;
+  text-decoration: none;
+}
+
+main {
+  max-width: 800px;
+  margin: 60px auto;
+  padding: 0 20px;
+}
+
+.project-meta {
+  font-size: 14px;
+  color: #777;
+  margin-bottom: 8px;
+}
+
+.project-title {
+  font-size: 32px;
+  font-weight: 400;
+  margin-bottom: 8px;
+}
+
+.project-subtitle {
+  font-size: 16px;
+  color: #777;
+  margin-bottom: 24px;
+}
+
+.advisor {
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 40px;
+}
+
+.section-title {
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-top: 40px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+p {
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+ul,
+ol {
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+  padding-left: 24px;
+}
+
+li {
+  margin-bottom: 8px;
+}
+
+a {
+  color: #111;
+}
+
+a:hover {
+  color: #555;
+}
+
+button {
+  background-color: #111;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  border-radius: 4px;
+}
+
+button:hover {
+  background-color: #333;
+}
+
+#messageDisplay {
+  font-size: 16px;
+  line-height: 1.6;
+  margin-top: 10px;
+  margin-bottom: 24px;
+  padding: 16px;
+  border: 1px solid #ccc;
+  background-color: white;
+  border-radius: 4px;
+  min-height: 20px;
+}

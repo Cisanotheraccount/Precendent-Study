@@ -1,146 +1,136 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>D3.js / Data-Driven Documents - Precedent Study</title>
-    <meta
-      name="description"
-      content="A precedent study datasheet for D3.js / Data-Driven Documents."
-    />
-    <link rel="icon" href="data:," />
-    <link rel="stylesheet" href="styles.css" />
-    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
-  </head>
-  <body>
-    <header class="site-header">
-      <nav class="topbar" aria-label="Main navigation">
-        <a class="brand" href="#top">Precedent Study</a>
-        <div class="nav-links">
-          <a href="#datasheet">Datasheet</a>
-          <a href="#method">Method</a>
-          <a href="#bibliography">Sources</a>
-          <a href="#questions">Questions</a>
-        </div>
-      </nav>
-    </header>
 
-    <main id="top">
-      <section class="hero">
-        <p class="eyebrow">ARCHA4144 Methods as Practices</p>
-        <h1>D3.js / Data-Driven Documents</h1>
-        <p class="dek">
-          D3 changed web visualization by making data directly drive browser
-          documents, turning the webpage into a programmable visual system
-          rather than a static display.
-        </p>
-        <div class="hero-meta" aria-label="Project quick facts">
-          <span>Mike Bostock</span>
-          <span>2011</span>
-          <span>Open-source JavaScript library</span>
-        </div>
-      </section>
+<head>
+  <meta charset="UTF-8">
+  <title>D3.js Precedent Study</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
 
-      <section class="band intro-grid" aria-labelledby="argument-title">
-        <div>
-          <p class="section-kicker">Working Thesis</p>
-          <h2 id="argument-title">Data as interface</h2>
-        </div>
-        <p>
-          D3 is a computational design precedent because it changes how visual
-          form is produced. The designer writes relationships between data,
-          document elements, scales, shapes, interaction, and time. The final
-          graphic is not drawn once by hand; it is generated, updated, and
-          transformed through code.
-        </p>
-      </section>
+<body>
+  <header>
+    <div class="left">Columbia GSAPP</div>
+    <div class="center">
+      Methods as Practices<br>
+      <span>Precedent Study</span>
+    </div>
+    <div class="right"><a href="#sources">Sources</a></div>
+  </header>
 
-      <section class="section" id="datasheet" aria-labelledby="datasheet-title">
-        <div class="section-heading">
-          <p class="section-kicker">01 / Datasheet</p>
-          <h2 id="datasheet-title">Basic information</h2>
-        </div>
-        <div class="datasheet-grid" id="datasheet-grid"></div>
-      </section>
+  <main>
+    <div class="project-meta">ARCHA4144 / 2026</div>
+    <div class="project-title">D3.js / Data-Driven Documents</div>
+    <div class="project-subtitle">Ci Song</div>
 
-      <section class="section split" id="method" aria-labelledby="method-title">
-        <div class="section-heading">
-          <p class="section-kicker">02 / Method</p>
-          <h2 id="method-title">From data to document</h2>
-          <p>
-            The diagram is generated with D3 from the same dataset used by this
-            page. It shows the basic chain of relationships that makes the
-            browser into a visualization medium.
-          </p>
-        </div>
-        <div class="diagram-panel">
-          <svg id="flow-diagram" role="img" aria-label="D3 method diagram"></svg>
-        </div>
-      </section>
+    <div class="advisor">
+      Computational design precedent<br>
+      <strong>Mike Bostock, Vadim Ogievetsky, Jeffrey Heer</strong>
+    </div>
 
-      <section class="section" aria-labelledby="context-title">
-        <div class="section-heading">
-          <p class="section-kicker">03 / Context</p>
-          <h2 id="context-title">Why it matters</h2>
-        </div>
-        <div class="text-columns">
-          <article>
-            <h3>Historical and technical context</h3>
-            <p id="historical-context"></p>
-          </article>
-          <article>
-            <h3>Visual and aesthetic logic</h3>
-            <p id="visual-logic"></p>
-          </article>
-          <article>
-            <h3>Community of practice</h3>
-            <p id="community"></p>
-          </article>
-        </div>
-      </section>
+    <div class="section-title">Abstract</div>
+    <p>
+      D3.js is an open-source JavaScript library for making data-driven graphics
+      in the browser. It is important because it lets data control HTML and SVG
+      elements directly. Instead of using a fixed chart template, a designer can
+      write code that connects data, visual form, interaction, and the webpage.
+    </p>
 
-      <section
-        class="section"
-        id="bibliography"
-        aria-labelledby="bibliography-title"
-      >
-        <div class="section-heading">
-          <p class="section-kicker">04 / Bibliography</p>
-          <h2 id="bibliography-title">Source dataset</h2>
-          <p>
-            Sources are separated into author/project materials and sources by
-            others, matching the assignment's data collection requirement.
-          </p>
-        </div>
-        <div class="source-toolbar" aria-label="Source filters">
-          <button class="filter active" data-filter="all">All sources</button>
-          <button class="filter" data-filter="Author / Project Sources">
-            Author / Project
-          </button>
-          <button class="filter" data-filter="Sources By Others">
-            Others / Critique
-          </button>
-        </div>
-        <div class="source-list" id="source-list"></div>
-      </section>
+    <div class="section-title">Basic Datasheet</div>
+    <ul>
+      <li><strong>Title:</strong> D3.js / Data-Driven Documents</li>
+      <li><strong>Year:</strong> 2011</li>
+      <li><strong>Format:</strong> Open-source JavaScript library, research paper, web visualization framework</li>
+      <li><strong>Primary creator:</strong> Mike / Michael Bostock</li>
+      <li><strong>Paper authors:</strong> Michael Bostock, Vadim Ogievetsky, Jeffrey Heer</li>
+      <li><strong>Intended audience:</strong> Web developers, visualization designers, researchers, journalists, and civic-data practitioners</li>
+      <li><strong>Project URL:</strong> <a href="https://d3js.org/">https://d3js.org/</a></li>
+      <li><strong>Source code:</strong> <a href="https://github.com/d3/d3">https://github.com/d3/d3</a></li>
+      <li><strong>Paper:</strong> <a href="https://idl.uw.edu/papers/d3">https://idl.uw.edu/papers/d3</a></li>
+    </ul>
 
-      <section class="section split" id="questions" aria-labelledby="questions-title">
-        <div class="section-heading">
-          <p class="section-kicker">05 / Critical Frame</p>
-          <h2 id="questions-title">Questions for analysis</h2>
-        </div>
-        <ul class="question-list" id="question-list"></ul>
-      </section>
-    </main>
+    <div class="section-title">Main Argument</div>
+    <p>
+      My main argument is that D3 changed web visualization by making data
+      directly drive browser documents. This turns the webpage into a
+      programmable visual system instead of a static display.
+    </p>
 
-    <footer class="site-footer">
-      <p>
-        D3.js precedent study dataset. Prepared for ARCHA4144 Methods as
-        Practices.
-      </p>
-      <a href="data/d3-datasheet.json">View structured dataset</a>
-    </footer>
+    <div class="section-title">Historical Context</div>
+    <p>
+      Before D3, many visualization tools hid the final graphic inside their own
+      systems. D3 took a different approach. It used the browser's normal
+      document structure, especially HTML and SVG, so designers could inspect and
+      change every visual element.
+    </p>
+    <p>
+      D3 also grew out of earlier visualization research, especially Protovis.
+      The difference is that D3 moved closer to the normal language of the web.
+      This made it more flexible for custom websites, journalism, maps, diagrams,
+      and interactive data graphics.
+    </p>
 
-    <script src="scripts/main.js"></script>
-  </body>
+    <div class="section-title">Computational Method</div>
+    <p>
+      The basic method of D3 is data binding. A dataset is connected to elements
+      on the page. When the data changes, the page can change too. D3 also uses
+      scales, selections, data joins, transitions, and event listeners to create
+      visual structure and interaction.
+    </p>
+
+    <button id="demoButton">Show Method Summary</button>
+    <div id="messageDisplay"></div>
+
+    <div class="section-title">Visual Language</div>
+    <p>
+      D3 does not have one fixed visual style. It can be used for bar charts,
+      maps, networks, dashboards, timelines, and experimental graphics. Its
+      visual language is flexible because the designer builds the form from
+      smaller parts.
+    </p>
+
+    <div class="section-title">Why It Matters</div>
+    <p>
+      D3 matters because it helped make interactive web visualization a common
+      design practice. It influenced research, data journalism, civic technology,
+      and creative coding. At the same time, D3 can be difficult for beginners
+      because it requires knowledge of JavaScript, data, and the browser.
+    </p>
+
+    <div class="section-title" id="sources">Author / Project Sources</div>
+    <ol>
+      <li><a href="https://d3js.org/">D3 official site</a></li>
+      <li><a href="https://d3js.org/what-is-d3">What is D3?</a></li>
+      <li><a href="https://idl.uw.edu/papers/d3">D3: Data-Driven Documents paper page</a></li>
+      <li><a href="https://idl.cs.washington.edu/files/2011-D3-InfoVis.pdf">Original D3 paper PDF</a></li>
+      <li><a href="https://github.com/d3/d3">D3 GitHub repository</a></li>
+      <li><a href="https://bost.ocks.org/mike/join/">Thinking with Joins</a></li>
+      <li><a href="https://bost.ocks.org/mike/constancy/">Object Constancy</a></li>
+      <li><a href="https://bost.ocks.org/mike/chart/">Towards Reusable Charts</a></li>
+      <li><a href="https://medium.com/@mbostock/what-makes-software-good-943557f8a488">What Makes Software Good?</a></li>
+      <li><a href="https://observablehq.com/@mbostock/10-years-of-open-source-visualization">10 Years of Open-Source Visualization</a></li>
+    </ol>
+
+    <div class="section-title">Sources By Others</div>
+    <ol>
+      <li><a href="https://ieeevis.org/year/2021/info/awards/test-of-time-awards">IEEE VIS 2021 Test of Time Award</a></li>
+      <li><a href="https://nightingaledvs.com/information-is-beautiful-awards-test-of-time/">Information is Beautiful Awards: Test of Time</a></li>
+      <li><a href="https://www.informationisbeautifulawards.com/news/593-information-is-beautiful-awards-2022-the-winners">Information is Beautiful Awards 2022 Winners</a></li>
+      <li><a href="https://medium.com/dailyjs/the-trouble-with-d3-4a84f7de011f">The Trouble with D3</a></li>
+      <li><a href="https://policyviz.com/podcast/episode-175-mike-bostock/">PolicyViz Episode #175: Mike Bostock</a></li>
+      <li><a href="https://www.wired.com/2013/12/make-better-maps-with-d3/">Wired: Better Maps with D3</a></li>
+    </ol>
+
+    <div class="section-title">Questions For Later Analysis</div>
+    <ul>
+      <li>Who gains visual power when data visualization becomes programmable?</li>
+      <li>Who is excluded when expressive visualization requires coding knowledge?</li>
+      <li>Does D3 democratize visualization, or does it mainly help people who already know code?</li>
+      <li>When does flexibility become complexity?</li>
+    </ul>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+
 </html>
