@@ -311,10 +311,6 @@ a:hover {
   width: 100%;
 }
 
-.live-embed-lower-data iframe {
-  top: -64px;
-}
-
 .visual-copy {
   display: block;
 }
