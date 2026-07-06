@@ -262,18 +262,22 @@ a:hover {
 
 .visual-evidence-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  grid-template-columns: 1fr;
+  gap: 18px;
   margin: 28px 0 42px;
 }
 
 .visual-card {
+  align-items: center;
   background: rgba(255, 255, 255, 0.78);
   border: 1px solid rgba(249, 160, 60, 0.28);
   border-radius: 18px;
   color: var(--d3-ink);
-  display: block;
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(220px, 0.75fr);
+  gap: 18px;
   overflow: hidden;
+  padding: 14px;
   text-decoration: none;
   box-shadow: 0 16px 34px rgba(184, 78, 81, 0.08);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
@@ -287,21 +291,25 @@ a:hover {
 }
 
 .visual-card img {
-  aspect-ratio: 4 / 3;
   display: block;
-  object-fit: cover;
+  height: auto;
+  object-fit: contain;
   width: 100%;
+  border-radius: 12px;
+  background: #fff;
+  border: 1px solid rgba(249, 160, 60, 0.16);
 }
 
 .visual-card span,
 .visual-card strong,
 .visual-card p {
-  margin-left: 14px;
-  margin-right: 14px;
+  grid-column: 2;
+  margin-left: 0;
+  margin-right: 0;
 }
 
 .visual-card span {
-  margin-top: 14px;
+  margin-top: 0;
 }
 
 .visual-card strong {
@@ -317,7 +325,7 @@ a:hover {
   color: #5a3b34;
   font-size: 13px;
   line-height: 1.45;
-  margin-bottom: 16px;
+  margin-bottom: 0;
   margin-top: 8px;
 }
 
@@ -347,5 +355,15 @@ a:hover {
   .evidence-feature,
   .visual-evidence-grid {
     grid-template-columns: 1fr;
+  }
+
+  .visual-card {
+    grid-template-columns: 1fr;
+  }
+
+  .visual-card span,
+  .visual-card strong,
+  .visual-card p {
+    grid-column: 1;
   }
 }
