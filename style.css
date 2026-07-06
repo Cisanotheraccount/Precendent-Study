@@ -33,6 +33,7 @@ header .center span {
 header .right a {
   color: #111;
   text-decoration: none;
+  margin-left: 16px;
 }
 
 main {
@@ -73,6 +74,13 @@ main {
   font-size: 14px;
 }
 
+h2 {
+  font-size: 22px;
+  font-weight: 400;
+  margin-top: 32px;
+  margin-bottom: 12px;
+}
+
 p {
   font-size: 16px;
   line-height: 1.6;
@@ -97,4 +105,85 @@ a {
 
 a:hover {
   color: #555;
+}
+
+.ontology-area {
+  background: linear-gradient(180deg, #ffffff 0%, #f2f2f2 100%);
+  border: 1px solid #ddd;
+  border-radius: 24px;
+  margin: 28px 0 40px;
+  padding: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08);
+}
+
+#ontology-visual {
+  height: 360px;
+  overflow: hidden;
+}
+
+#ontology-visual svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ontology-node rect {
+  fill: rgba(255, 255, 255, 0.82);
+  stroke: rgba(0, 0, 0, 0.12);
+  stroke-width: 1;
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.08));
+  transition: fill 0.2s ease, stroke 0.2s ease, filter 0.2s ease;
+}
+
+.ontology-node text {
+  fill: #222;
+  font-size: 14px;
+  font-weight: 400;
+  text-anchor: middle;
+  dominant-baseline: middle;
+  pointer-events: none;
+  transition: fill 0.2s ease, font-size 0.2s ease;
+}
+
+.ontology-node.active rect {
+  fill: #111;
+  stroke: #111;
+  filter: drop-shadow(0 18px 34px rgba(0, 0, 0, 0.22));
+}
+
+.ontology-node.active text {
+  fill: #fff;
+  font-size: 16px;
+}
+
+#ontology-caption {
+  border-top: 1px solid #ddd;
+  color: #333;
+  margin: 0;
+  padding-top: 14px;
+  min-height: 52px;
+}
+
+@media (max-width: 700px) {
+  header {
+    padding: 20px;
+  }
+
+  header .right a {
+    display: block;
+    margin-left: 0;
+    margin-bottom: 6px;
+  }
+
+  main {
+    margin: 40px auto;
+  }
+
+  .project-title {
+    font-size: 28px;
+  }
+
+  #ontology-visual {
+    height: 320px;
+  }
 }
