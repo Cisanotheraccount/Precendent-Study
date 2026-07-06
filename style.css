@@ -274,11 +274,10 @@ a:hover {
   border-radius: 18px;
   color: var(--d3-ink);
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(220px, 0.75fr);
+  grid-template-columns: minmax(0, 1.35fr) minmax(220px, 0.65fr);
   gap: 18px;
   overflow: hidden;
   padding: 14px;
-  text-decoration: none;
   box-shadow: 0 16px 34px rgba(184, 78, 81, 0.08);
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
@@ -290,14 +289,29 @@ a:hover {
   box-shadow: 0 22px 46px rgba(184, 78, 81, 0.14);
 }
 
-.visual-card img {
-  display: block;
-  height: auto;
-  object-fit: contain;
-  width: 100%;
-  border-radius: 12px;
+.live-embed {
   background: #fff;
   border: 1px solid rgba(249, 160, 60, 0.16);
+  border-radius: 12px;
+  min-height: 360px;
+  overflow: hidden;
+}
+
+.live-embed iframe {
+  border: 0;
+  display: block;
+  height: 360px;
+  width: 100%;
+}
+
+.visual-copy {
+  display: block;
+}
+
+.visual-copy a {
+  display: inline-block;
+  font-size: 13px;
+  margin-top: 12px;
 }
 
 .visual-card span,
@@ -365,5 +379,11 @@ a:hover {
   .visual-card strong,
   .visual-card p {
     grid-column: 1;
+  }
+
+  .live-embed,
+  .live-embed iframe {
+    height: 340px;
+    min-height: 340px;
   }
 }
