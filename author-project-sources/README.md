@@ -10,3 +10,6 @@
 8. [Towards Reusable Charts](https://bost.ocks.org/mike/chart/). Mike Bostock, 2012.
 9. [What Makes Software Good?](https://medium.com/@mbostock/what-makes-software-good-943557f8a488). Mike Bostock, 2016.
 10. [10 Years of Open-Source Visualization](https://observablehq.com/@mbostock/10-years-of-open-source-visualization). Mike Bostock, 2021.
+11. [Marey's Trains](https://observablehq.com/@d3/mareys-trains). D3 / Observable, current.
+12. [Icelandic Population by Age, 1841-2019](https://observablehq.com/@d3/icelandic-population-by-age-1841-2019). D3 / Observable, current.
+13. [The Wealth & Health of Nations](https://observablehq.com/@mbostock/the-wealth-health-of-nations). Mike Bostock / Observable, current.
