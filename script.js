@@ -69,8 +69,8 @@ const visual = document.getElementById("ontology-visual");
 const caption = document.getElementById("ontology-caption");
 
 if (visual && caption && window.d3) {
-  const height = 360;
   let width = visual.clientWidth || 760;
+  let height = visual.clientHeight || 430;
   let activeNode = null;
 
   const svg = d3
@@ -84,14 +84,22 @@ if (visual && caption && window.d3) {
 
     return {
       ...item,
+      index,
       width: labelWidth,
       height: 36,
       radius: Math.max(labelWidth / 2, 28),
-      x: 80 + Math.random() * Math.max(width - 160, 120),
-      y: 60 + Math.random() * (height - 120),
-      drift: index * 0.7
+      phase: index * 0.82,
+      speed: 0.35 + (index % 5) * 0.06,
+      xAmplitude: 26 + (index % 4) * 7,
+      yAmplitude: 18 + (index % 3) * 8,
+      x: width / 2,
+      y: height / 2,
+      targetX: width / 2,
+      targetY: height / 2
     };
   });
+
+  placeAnchors();
 
   const labels = svg
     .selectAll("g")
@@ -115,14 +123,9 @@ if (visual && caption && window.d3) {
     .append("text")
     .text(d => d.name);
 
-  const simulation = d3
-    .forceSimulation(nodes)
-    .alphaTarget(0.04)
-    .velocityDecay(0.28)
-    .force("x", d3.forceX(width / 2).strength(0.015))
-    .force("y", d3.forceY(height / 2).strength(0.018))
-    .force("collide", d3.forceCollide(d => d.radius + 5).iterations(2))
-    .on("tick", ticked);
+  d3.timer(elapsed => {
+    updatePositions(elapsed / 1000);
+  });
 
   d3.select(visual)
     .on("mousemove", function(event) {
@@ -136,17 +139,19 @@ if (visual && caption && window.d3) {
 
   d3.select(window).on("resize", resize);
 
-  function ticked() {
-    const time = Date.now() / 1000;
-
+  function updatePositions(time) {
     nodes.forEach(node => {
-      node.vx += Math.sin(time + node.drift) * 0.003;
-      node.vy += Math.cos(time * 0.9 + node.drift) * 0.003;
+      const smallOrbit = Math.sin(time * (node.speed * 0.7) + node.phase * 1.6) * 10;
+      node.x = node.anchorX + Math.sin(time * node.speed + node.phase) * node.xAmplitude + smallOrbit;
+      node.y = node.anchorY + Math.cos(time * (node.speed + 0.18) + node.phase) * node.yAmplitude;
       node.x = Math.max(node.radius, Math.min(width - node.radius, node.x));
       node.y = Math.max(node.radius, Math.min(height - node.radius, node.y));
     });
 
-    labels.attr("transform", d => `translate(${d.x}, ${d.y})`);
+    labels.attr("transform", d => {
+      const scale = d === activeNode ? 1.08 : 1;
+      return `translate(${d.x}, ${d.y}) scale(${scale})`;
+    });
   }
 
   function findClosestNode(mouseX, mouseY) {
@@ -178,9 +183,31 @@ if (visual && caption && window.d3) {
 
   function resize() {
     width = visual.clientWidth || 760;
+    height = visual.clientHeight || 430;
     svg.attr("viewBox", `0 0 ${width} ${height}`);
-    simulation.force("x", d3.forceX(width / 2).strength(0.015));
-    simulation.alpha(0.4).restart();
+    placeAnchors();
+    updatePositions(Date.now() / 1000);
+  }
+
+  function placeAnchors() {
+    const columns = width < 520 ? 3 : 4;
+    const rows = Math.ceil(nodes.length / columns);
+    const marginX = width < 520 ? 66 : 92;
+    const marginY = 56;
+    const innerWidth = Math.max(width - marginX * 2, 120);
+    const innerHeight = height - marginY * 2;
+
+    nodes.forEach(node => {
+      const column = node.index % columns;
+      const row = Math.floor(node.index / columns);
+      const xStep = columns > 1 ? innerWidth / (columns - 1) : 0;
+      const yStep = rows > 1 ? innerHeight / (rows - 1) : 0;
+
+      node.anchorX = marginX + column * xStep;
+      node.anchorY = marginY + row * yStep;
+      node.targetX = node.anchorX;
+      node.targetY = node.anchorY;
+    });
   }
 } else if (visual && caption) {
   caption.textContent = "The interactive D3 ontology map could not load.";
