@@ -68,7 +68,7 @@ button:focus-visible {
   z-index: 0;
   inset: -32px;
   background-image: radial-gradient(circle, rgba(232, 240, 248, 0.38) 0 1px, transparent 1.25px);
-  background-size: 26px 26px;
+  background-size: 104px 104px;
   background-position: 0 var(--grid-shift);
   opacity: 0.38;
   pointer-events: none;

@@ -68,10 +68,10 @@ const SCENES = [
     title: "D3 is a modular toolbox within a wider network.",
     body: "At the software layer, D3 comprises modules for data, selections and joins, scales and axes, shapes, layouts, transitions, and interaction. These connect JavaScript and data to DOM, SVG, HTML, or Canvas; documentation, examples, source code, maintainers, and users form the surrounding social infrastructure.",
     placement: "left",
-    layout: "ontology-specimen",
+    layout: "ontology-logo",
     camera: [-0.22, 0.12, 9.7],
     rotation: [0.04, -0.08, 0],
-    spinMode: "specimen",
+    spinMode: "readable",
     pointScale: 0.72,
     ambientMotion: "specimen",
     mobileY: 0.72,
@@ -896,6 +896,7 @@ function buildLayouts(logoImage) {
   return SCENES.map((scene) => {
     switch (scene.layout) {
       case "logo": return logoLayout(particleCount, logoImage);
+      case "ontology-logo": return ontologyLogoLayout(particleCount, logoImage);
       case "workflow": return workflowLayout(particleCount);
       case "retro-computer": return retroComputerLayout(particleCount);
       case "stanford-lineage": return lineageLayout(particleCount);
@@ -1533,6 +1534,20 @@ function logoLayout(count, image) {
     points[i * 3] = (x / 320 - 0.5) * (isMobile ? 6.9 : 6.2) + gaussian() * 0.025;
     points[i * 3 + 1] = -(y / 320 - 0.5) * (isMobile ? 6.9 : 6.2) + gaussian() * 0.025 + (isMobile ? 0.7 : 0);
     points[i * 3 + 2] = depth;
+  }
+  return points;
+}
+
+function ontologyLogoLayout(count, image) {
+  const points = logoLayout(count, image);
+  if (!isMobile) return points;
+
+  const scale = 0.68;
+  const inheritedMobileY = 0.7;
+  for (let i = 0; i < count; i += 1) {
+    points[i * 3] *= scale;
+    points[i * 3 + 1] = (points[i * 3 + 1] - inheritedMobileY) * scale + inheritedMobileY;
+    points[i * 3 + 2] *= scale;
   }
   return points;
 }
