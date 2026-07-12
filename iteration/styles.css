@@ -138,7 +138,6 @@ button:focus-visible {
 .ontology-overlay {
   --line-offset: 1;
   --label-opacity: 0;
-  --specimen-bob: 0px;
   position: absolute;
   z-index: 4;
   inset: 0;
@@ -151,13 +150,7 @@ button:focus-visible {
 
 .ontology-overlay__stage {
   position: absolute;
-  top: 13vh;
-  right: 14vw;
-  bottom: 10vh;
-  left: 31vw;
-  min-height: 430px;
-  transform: translate3d(0, var(--specimen-bob), 0);
-  will-change: transform;
+  inset: 0;
 }
 
 .ontology-overlay__linework {
@@ -171,8 +164,8 @@ button:focus-visible {
 
 .ontology-overlay__linework polyline {
   fill: none;
-  stroke: rgba(240, 246, 252, 0.64);
-  stroke-width: 1;
+  stroke: rgba(240, 246, 252, 0.72);
+  stroke-width: 1.2;
   stroke-linecap: square;
   stroke-linejoin: miter;
   stroke-dasharray: 1;
@@ -183,14 +176,15 @@ button:focus-visible {
 .ontology-overlay__anchors {
   fill: none;
   stroke: rgba(240, 246, 252, 0.72);
-  stroke-width: 1;
+  stroke-width: 1.2;
   opacity: var(--label-opacity);
   vector-effect: non-scaling-stroke;
 }
 
-.ontology-label,
-.ontology-signal {
+.ontology-label {
   position: absolute;
+  top: 0;
+  left: 0;
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -198,71 +192,51 @@ button:focus-visible {
   font-family: var(--mono);
   line-height: 1.2;
   opacity: var(--label-opacity);
-  text-shadow: 0 1px 10px rgba(45, 56, 70, 0.35);
+  text-shadow: 0 1px 12px rgba(35, 45, 58, 0.52), 0 0 3px rgba(239, 246, 252, 0.22);
+  will-change: transform, opacity;
 }
 
-.ontology-label strong,
-.ontology-signal strong {
-  font-size: clamp(8px, 0.78vw, 11px);
+.ontology-label strong {
+  font-size: clamp(12px, 0.98vw, 15px);
+  font-weight: 700;
+  letter-spacing: 0.035em;
+}
+
+.ontology-label span {
+  color: rgba(222, 232, 242, 0.76);
+  font-size: clamp(8px, 0.68vw, 10px);
   font-weight: 600;
-  letter-spacing: 0.04em;
-}
-
-.ontology-label span,
-.ontology-signal span {
-  color: rgba(218, 228, 239, 0.62);
-  font-size: clamp(6px, 0.56vw, 8px);
-  letter-spacing: 0.12em;
+  letter-spacing: 0.11em;
 }
 
 .ontology-label--document {
-  top: 8%;
-  left: 1.5%;
+  align-items: flex-start;
+  text-align: left;
 }
 
 .ontology-label--code {
-  top: 7%;
-  right: 1.5%;
   align-items: flex-end;
   text-align: right;
 }
 
 .ontology-label--data {
-  top: 36%;
-  left: 1.5%;
+  align-items: flex-start;
+  text-align: left;
 }
 
 .ontology-label--join {
-  top: 36%;
-  right: 1.5%;
   align-items: flex-end;
   text-align: right;
 }
 
 .ontology-label--scale {
-  right: 1.5%;
-  bottom: 12%;
   align-items: flex-end;
   text-align: right;
 }
 
 .ontology-label--motion {
-  right: 27%;
-  bottom: 0;
   align-items: center;
   text-align: center;
-}
-
-.ontology-signal {
-  top: 53%;
-  right: 9%;
-  align-items: flex-end;
-  text-align: right;
-}
-
-.ontology-signal strong {
-  color: rgba(225, 239, 252, 0.78);
-  font-weight: 400;
 }
 
 .site-header {
@@ -968,10 +942,6 @@ button:focus-visible {
     right: 156px;
   }
 
-  .ontology-overlay__stage {
-    right: 10vw;
-    left: 24vw;
-  }
 }
 
 @media (max-width: 640px) {
@@ -983,32 +953,20 @@ button:focus-visible {
     gap: 0;
   }
 
-  .ontology-overlay__stage {
-    top: 74px;
-    right: 7vw;
-    bottom: 48vh;
-    left: 7vw;
-    min-height: 250px;
-  }
-
-  .ontology-overlay__linework polyline:nth-child(n + 5),
-  .ontology-overlay__anchors path:nth-child(n + 5),
+  .ontology-overlay__linework [data-callout="scale"],
+  .ontology-overlay__linework [data-callout="motion"],
   .ontology-label[data-tier="secondary"] {
     display: none;
   }
 
-  .ontology-label strong,
-  .ontology-signal strong {
-    font-size: 7px;
+  .ontology-label strong {
+    font-size: 11px;
+    font-weight: 700;
   }
 
-  .ontology-label span,
-  .ontology-signal span {
-    font-size: 5px;
-  }
-
-  .ontology-signal {
-    display: none;
+  .ontology-label span {
+    font-size: 7.5px;
+    font-weight: 600;
   }
 
   .scene-card,

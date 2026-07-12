@@ -160,6 +160,62 @@ const WORKFLOW_NODES = [
 ];
 
 const ONTOLOGY_INDEX = SCENES.findIndex((scene) => scene.id === "ontology");
+const ONTOLOGY_CALLOUTS = [
+  {
+    id: "document",
+    anchor: [-1.2, 1.18, 0.34],
+    side: "left",
+    distance: 158,
+    yOffset: -72,
+    mobileDistance: 28,
+    mobileYOffset: -45,
+  },
+  {
+    id: "code",
+    anchor: [1.18, 1.08, 0.34],
+    side: "right",
+    distance: 158,
+    yOffset: -76,
+    mobileDistance: 28,
+    mobileYOffset: -45,
+  },
+  {
+    id: "data",
+    anchor: [-1.52, 0.12, 0.34],
+    side: "left",
+    distance: 148,
+    yOffset: -46,
+    mobileDistance: 24,
+    mobileYOffset: -18,
+  },
+  {
+    id: "join",
+    anchor: [1.52, 0.08, 0.34],
+    side: "right",
+    distance: 148,
+    yOffset: -20,
+    mobileDistance: 24,
+    mobileYOffset: -4,
+  },
+  {
+    id: "scale",
+    anchor: [1.16, -1.04, 0.34],
+    side: "right",
+    distance: 148,
+    yOffset: 54,
+    mobileDistance: 24,
+    mobileYOffset: 20,
+  },
+  {
+    id: "motion",
+    anchor: [0, -1.56, 0.34],
+    side: "center",
+    distance: 0,
+    yOffset: 88,
+    mobileDistance: 0,
+    mobileYOffset: 46,
+  },
+];
 
 const isMobile = window.matchMedia("(max-width: 680px), (pointer: coarse)").matches;
 const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -224,7 +280,11 @@ let layoutTextures = [];
 let sceneCards = [];
 let navButtons = [];
 let ontologyOverlay;
+let ontologyLinework;
+let ontologyCallouts = [];
 let animationFrameId = 0;
+
+const ontologyProjectedAnchor = new THREE.Vector3();
 
 const MAX_FORCE_SPLATS = 6;
 const forceSplats = Array.from({ length: MAX_FORCE_SPLATS }, () => ({
@@ -329,47 +389,52 @@ function buildOntologyOverlay() {
     <div class="ontology-overlay__stage">
       <svg class="ontology-overlay__linework" viewBox="0 0 1000 620" preserveAspectRatio="none" aria-hidden="true">
         <g>
-          <polyline pathLength="1" points="34,116 238,116 382,240" />
-          <polyline pathLength="1" points="966,108 770,108 628,238" />
-          <polyline pathLength="1" points="34,292 236,292 358,315" />
-          <polyline pathLength="1" points="966,300 770,300 650,315" />
-          <polyline pathLength="1" points="966,508 766,508 620,394" />
-          <polyline pathLength="1" points="664,602 664,532 562,420" />
+          <polyline data-callout="document" pathLength="1" points="0,0 0,0 0,0" />
+          <polyline data-callout="code" pathLength="1" points="0,0 0,0 0,0" />
+          <polyline data-callout="data" pathLength="1" points="0,0 0,0 0,0" />
+          <polyline data-callout="join" pathLength="1" points="0,0 0,0 0,0" />
+          <polyline data-callout="scale" pathLength="1" points="0,0 0,0 0,0" />
+          <polyline data-callout="motion" pathLength="1" points="0,0 0,0 0,0" />
         </g>
         <g class="ontology-overlay__anchors">
-          <path d="M374 240h16M382 232v16" />
-          <path d="M620 238h16M628 230v16" />
-          <path d="M350 315h16M358 307v16" />
-          <path d="M642 315h16M650 307v16" />
-          <path d="M612 394h16M620 386v16" />
-          <path d="M554 420h16M562 412v16" />
+          <path data-callout="document" d="M0 0" />
+          <path data-callout="code" d="M0 0" />
+          <path data-callout="data" d="M0 0" />
+          <path data-callout="join" d="M0 0" />
+          <path data-callout="scale" d="M0 0" />
+          <path data-callout="motion" d="M0 0" />
         </g>
       </svg>
 
-      <div class="ontology-label ontology-label--document">
+      <div class="ontology-label ontology-label--document" data-callout="document">
         <strong>SVG / HTML / CANVAS</strong><span>REPRESENTATION LAYER</span>
       </div>
-      <div class="ontology-label ontology-label--code">
+      <div class="ontology-label ontology-label--code" data-callout="code">
         <strong>CSS / JAVASCRIPT</strong><span>PRESENTATION + LOGIC</span>
       </div>
-      <div class="ontology-label ontology-label--data">
+      <div class="ontology-label ontology-label--data" data-callout="data">
         <strong>DATA</strong><span>SOURCE MATERIAL</span>
       </div>
-      <div class="ontology-label ontology-label--join">
+      <div class="ontology-label ontology-label--join" data-callout="join">
         <strong>SELECTIONS / JOINS</strong><span>RELATIONAL CORE</span>
       </div>
-      <div class="ontology-label ontology-label--scale" data-tier="secondary">
+      <div class="ontology-label ontology-label--scale" data-callout="scale" data-tier="secondary">
         <strong>SCALES / AXES</strong><span>TRANSLATION SYSTEM</span>
       </div>
-      <div class="ontology-label ontology-label--motion" data-tier="secondary">
+      <div class="ontology-label ontology-label--motion" data-callout="motion" data-tier="secondary">
         <strong>TRANSITIONS</strong><span>TIME + INTERACTION</span>
-      </div>
-      <div class="ontology-signal" aria-hidden="true">
-        <strong>LIVE RELATIONAL MODEL</strong>
       </div>
     </div>
   `;
   experience.append(ontologyOverlay);
+  ontologyLinework = ontologyOverlay.querySelector(".ontology-overlay__linework");
+  ontologyCallouts = ONTOLOGY_CALLOUTS.map((definition) => ({
+    ...definition,
+    localAnchor: new THREE.Vector3(...definition.anchor),
+    line: ontologyOverlay.querySelector(`polyline[data-callout="${definition.id}"]`),
+    marker: ontologyOverlay.querySelector(`.ontology-overlay__anchors [data-callout="${definition.id}"]`),
+    label: ontologyOverlay.querySelector(`.ontology-label[data-callout="${definition.id}"]`),
+  }));
 }
 
 function extraMarkup(type) {
@@ -1221,7 +1286,7 @@ function updateScene(sceneIndex, localProgress, force = false) {
     eased,
   );
   material.uniforms.uSpecimenPresence.value = ontologyPresence;
-  updateOntologyOverlay(ontologyPresence, bob);
+  updateOntologyOverlay(ontologyPresence);
   sceneCards.forEach((card, index) => {
     const distance = circularSceneDistance(index, sceneIndex, localProgress);
     const opacity = Math.max(0, 1 - Math.abs(distance) * 1.85);
@@ -1239,7 +1304,7 @@ function updateScene(sceneIndex, localProgress, force = false) {
   railProgress.style.height = `${chapterProgress * 100}%`;
 }
 
-function updateOntologyOverlay(presence, bob) {
+function updateOntologyOverlay(presence) {
   if (!ontologyOverlay) return;
   const lineDraw = smooth01(THREE.MathUtils.clamp((presence - 0.12) / 0.68, 0, 1));
   const labelReveal = smooth01(THREE.MathUtils.clamp((presence - 0.42) / 0.48, 0, 1));
@@ -1247,8 +1312,120 @@ function updateOntologyOverlay(presence, bob) {
   ontologyOverlay.style.visibility = presence < 0.012 ? "hidden" : "visible";
   ontologyOverlay.style.setProperty("--line-offset", (1 - lineDraw).toFixed(3));
   ontologyOverlay.style.setProperty("--label-opacity", labelReveal.toFixed(3));
-  ontologyOverlay.style.setProperty("--specimen-bob", `${bob * 18}px`);
   ontologyOverlay.setAttribute("aria-hidden", presence < 0.25 ? "true" : "false");
+
+  if (presence < 0.012 || !particlePoints || !camera || !ontologyLinework) return;
+
+  particlePoints.updateMatrixWorld(true);
+  camera.updateMatrixWorld(true);
+
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  const compact = viewportWidth <= 640;
+  const margin = compact ? 12 : 24;
+  const railClearance = compact ? 70 : 138;
+  ontologyLinework.setAttribute("viewBox", `0 0 ${viewportWidth} ${viewportHeight}`);
+
+  const placements = ontologyCallouts.flatMap((callout) => {
+    if (!callout.label || !callout.line || !callout.marker) return [];
+    if (compact && callout.label.dataset.tier === "secondary") return [];
+
+    ontologyProjectedAnchor
+      .copy(callout.localAnchor)
+      .applyMatrix4(particlePoints.matrixWorld)
+      .project(camera);
+
+    const anchorX = (ontologyProjectedAnchor.x * 0.5 + 0.5) * viewportWidth;
+    const anchorY = (-ontologyProjectedAnchor.y * 0.5 + 0.5) * viewportHeight;
+    const distance = compact ? callout.mobileDistance : callout.distance;
+    const yOffset = compact ? callout.mobileYOffset : callout.yOffset;
+    const labelWidth = callout.label.offsetWidth || (compact ? 112 : 156);
+    const labelHeight = callout.label.offsetHeight || (compact ? 28 : 34);
+
+    let labelX = anchorX;
+    if (callout.side === "left") labelX -= distance + labelWidth;
+    if (callout.side === "right") labelX += distance;
+    if (callout.side === "center") labelX -= labelWidth * 0.5;
+    let labelY = anchorY + yOffset;
+
+    labelX = THREE.MathUtils.clamp(labelX, margin, viewportWidth - railClearance - labelWidth);
+    labelY = THREE.MathUtils.clamp(labelY, compact ? 76 : 86, compact ? viewportHeight * 0.46 : viewportHeight - margin - labelHeight);
+    return [{ callout, anchorX, anchorY, labelX, labelY, labelWidth, labelHeight }];
+  });
+
+  ["left", "right"].forEach((side) => {
+    const group = placements
+      .filter((placement) => placement.callout.side === side)
+      .sort((a, b) => a.labelY - b.labelY);
+    if (!group.length) return;
+
+    const minimumY = compact ? 96 : 86;
+    const maximumY = compact
+      ? Math.min(viewportHeight * 0.465, 418)
+      : side === "left"
+        ? viewportHeight * 0.4
+        : viewportHeight - 38;
+    const gap = compact ? 11 : 15;
+    let cursor = minimumY;
+    group.forEach((placement) => {
+      placement.labelY = THREE.MathUtils.clamp(
+        placement.labelY,
+        minimumY,
+        maximumY - placement.labelHeight,
+      );
+      placement.labelY = Math.max(placement.labelY, cursor);
+      cursor = placement.labelY + placement.labelHeight + gap;
+    });
+
+    for (let index = group.length - 1; index >= 0; index -= 1) {
+      const placement = group[index];
+      if (index === group.length - 1) {
+        placement.labelY = Math.min(placement.labelY, maximumY - placement.labelHeight);
+        continue;
+      }
+      const next = group[index + 1];
+      placement.labelY = Math.min(
+        placement.labelY,
+        next.labelY - placement.labelHeight - gap,
+      );
+    }
+
+    if (group[0].labelY < minimumY) {
+      const correction = minimumY - group[0].labelY;
+      group.forEach((placement) => {
+        placement.labelY += correction;
+      });
+    }
+  });
+
+  placements.forEach(({ callout, anchorX, anchorY, labelX, labelY, labelWidth, labelHeight }) => {
+    callout.label.style.transform = `translate3d(${labelX.toFixed(1)}px, ${labelY.toFixed(1)}px, 0)`;
+
+    let labelEdgeX;
+    let labelEdgeY;
+    let elbowX;
+    let elbowY;
+    if (callout.side === "center") {
+      labelEdgeX = labelX + labelWidth * 0.5;
+      labelEdgeY = labelY - 9;
+      elbowX = labelEdgeX;
+      elbowY = THREE.MathUtils.lerp(labelEdgeY, anchorY, 0.48);
+    } else {
+      labelEdgeX = callout.side === "left" ? labelX + labelWidth + 9 : labelX - 9;
+      labelEdgeY = labelY + labelHeight * 0.52;
+      elbowX = THREE.MathUtils.lerp(labelEdgeX, anchorX, 0.52);
+      elbowY = labelEdgeY;
+    }
+
+    callout.line.setAttribute(
+      "points",
+      `${labelEdgeX.toFixed(1)},${labelEdgeY.toFixed(1)} ${elbowX.toFixed(1)},${elbowY.toFixed(1)} ${anchorX.toFixed(1)},${anchorY.toFixed(1)}`,
+    );
+    callout.marker.setAttribute(
+      "d",
+      `M${(anchorX - 7).toFixed(1)} ${anchorY.toFixed(1)}h14M${anchorX.toFixed(1)} ${(anchorY - 7).toFixed(1)}v14`,
+    );
+  });
 }
 
 function sceneSpin(scene) {
