@@ -160,59 +160,50 @@ const WORKFLOW_NODES = [
 ];
 
 const ONTOLOGY_INDEX = SCENES.findIndex((scene) => scene.id === "ontology");
+const ONTOLOGY_Z_SWING = Math.PI / 4;
+const ONTOLOGY_MOBILE_LAYOUT_SCALE = 0.68;
+const ONTOLOGY_MOBILE_LAYOUT_Y = 0.7;
 const ONTOLOGY_CALLOUTS = [
   {
     id: "document",
     anchor: [-1.2, 1.18, 0.34],
     side: "left",
-    distance: 158,
     yOffset: -72,
-    mobileDistance: 28,
     mobileYOffset: -45,
   },
   {
     id: "code",
     anchor: [1.18, 1.08, 0.34],
     side: "right",
-    distance: 158,
     yOffset: -76,
-    mobileDistance: 28,
     mobileYOffset: -45,
   },
   {
     id: "data",
-    anchor: [-1.52, 0.12, 0.34],
+    anchor: [-1.8, -0.82, 0.3],
     side: "left",
-    distance: 148,
     yOffset: -46,
-    mobileDistance: 24,
     mobileYOffset: -18,
   },
   {
     id: "join",
     anchor: [1.52, 0.08, 0.34],
     side: "right",
-    distance: 148,
     yOffset: -20,
-    mobileDistance: 24,
     mobileYOffset: -4,
   },
   {
     id: "scale",
     anchor: [1.16, -1.04, 0.34],
     side: "right",
-    distance: 148,
     yOffset: 54,
-    mobileDistance: 24,
     mobileYOffset: 20,
   },
   {
     id: "motion",
     anchor: [0, -1.56, 0.34],
     side: "center",
-    distance: 0,
     yOffset: 88,
-    mobileDistance: 0,
     mobileYOffset: 46,
   },
 ];
@@ -285,6 +276,7 @@ let ontologyCallouts = [];
 let animationFrameId = 0;
 
 const ontologyProjectedAnchor = new THREE.Vector3();
+const ontologyProjectedCenter = new THREE.Vector3();
 
 const MAX_FORCE_SPLATS = 6;
 const forceSplats = Array.from({ length: MAX_FORCE_SPLATS }, () => ({
@@ -1269,7 +1261,7 @@ function updateScene(sceneIndex, localProgress, force = false) {
       + ontologyPresence * Math.sin(state.visualTime * 0.31 + 0.8) * 0.075,
     lerpAngle(scene.rotation[1] + sceneSpin(scene), next.rotation[1] + sceneSpin(next), eased),
     THREE.MathUtils.lerp(scene.rotation[2], next.rotation[2], eased)
-      + ontologyPresence * (wrapAngle(state.visualTime * 0.075) + Math.sin(state.visualTime * 0.27) * 0.055),
+      - ontologyPresence * Math.sin(state.visualTime * 0.18) * ONTOLOGY_Z_SWING,
   );
   particlePoints.position.set(
     ontologyPresence * (isMobile ? 0 : 0.7),
@@ -1327,25 +1319,45 @@ function updateOntologyOverlay(presence) {
   const railClearance = compact ? 70 : 138;
   ontologyLinework.setAttribute("viewBox", `0 0 ${viewportWidth} ${viewportHeight}`);
 
+  ontologyProjectedCenter
+    .set(0, isMobile ? ONTOLOGY_MOBILE_LAYOUT_Y : 0, 0)
+    .applyMatrix4(particlePoints.matrixWorld)
+    .project(camera);
+  const objectCenterX = (ontologyProjectedCenter.x * 0.5 + 0.5) * viewportWidth;
+
   const placements = ontologyCallouts.flatMap((callout) => {
     if (!callout.label || !callout.line || !callout.marker) return [];
     if (compact && callout.label.dataset.tier === "secondary") return [];
 
+    ontologyProjectedAnchor.copy(callout.localAnchor);
+    if (isMobile) {
+      ontologyProjectedAnchor.x *= ONTOLOGY_MOBILE_LAYOUT_SCALE;
+      ontologyProjectedAnchor.y = (
+        ontologyProjectedAnchor.y - ONTOLOGY_MOBILE_LAYOUT_Y
+      ) * ONTOLOGY_MOBILE_LAYOUT_SCALE + ONTOLOGY_MOBILE_LAYOUT_Y;
+      ontologyProjectedAnchor.z *= ONTOLOGY_MOBILE_LAYOUT_SCALE;
+    }
     ontologyProjectedAnchor
-      .copy(callout.localAnchor)
       .applyMatrix4(particlePoints.matrixWorld)
       .project(camera);
 
     const anchorX = (ontologyProjectedAnchor.x * 0.5 + 0.5) * viewportWidth;
     const anchorY = (-ontologyProjectedAnchor.y * 0.5 + 0.5) * viewportHeight;
-    const distance = compact ? callout.mobileDistance : callout.distance;
     const yOffset = compact ? callout.mobileYOffset : callout.yOffset;
     const labelWidth = callout.label.offsetWidth || (compact ? 112 : 156);
     const labelHeight = callout.label.offsetHeight || (compact ? 28 : 34);
+    const edgeInset = compact ? 6 : 14;
+    const edgeDrift = THREE.MathUtils.clamp(
+      (anchorX - objectCenterX) * (compact ? 0.035 : 0.06),
+      compact ? -7 : -14,
+      compact ? 7 : 14,
+    );
 
     let labelX = anchorX;
-    if (callout.side === "left") labelX -= distance + labelWidth;
-    if (callout.side === "right") labelX += distance;
+    if (callout.side === "left") labelX = margin + edgeInset + edgeDrift;
+    if (callout.side === "right") {
+      labelX = viewportWidth - railClearance - labelWidth - edgeInset + edgeDrift;
+    }
     if (callout.side === "center") labelX -= labelWidth * 0.5;
     let labelY = anchorY + yOffset;
 
@@ -1362,7 +1374,7 @@ function updateOntologyOverlay(presence) {
 
     const minimumY = compact ? 96 : 86;
     const maximumY = compact
-      ? Math.min(viewportHeight * 0.465, 418)
+      ? Math.min(viewportHeight * 0.22, 188)
       : side === "left"
         ? viewportHeight * 0.4
         : viewportHeight - 38;
@@ -1542,12 +1554,12 @@ function ontologyLogoLayout(count, image) {
   const points = logoLayout(count, image);
   if (!isMobile) return points;
 
-  const scale = 0.68;
-  const inheritedMobileY = 0.7;
   for (let i = 0; i < count; i += 1) {
-    points[i * 3] *= scale;
-    points[i * 3 + 1] = (points[i * 3 + 1] - inheritedMobileY) * scale + inheritedMobileY;
-    points[i * 3 + 2] *= scale;
+    points[i * 3] *= ONTOLOGY_MOBILE_LAYOUT_SCALE;
+    points[i * 3 + 1] = (
+      points[i * 3 + 1] - ONTOLOGY_MOBILE_LAYOUT_Y
+    ) * ONTOLOGY_MOBILE_LAYOUT_SCALE + ONTOLOGY_MOBILE_LAYOUT_Y;
+    points[i * 3 + 2] *= ONTOLOGY_MOBILE_LAYOUT_SCALE;
   }
   return points;
 }
