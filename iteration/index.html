@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      name="description"
+      content="A cinematic, particle-based precedent study of D3.js by Ci Song."
+    />
+    <title>D3.js — A Living Document</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "./vendor/three.module.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="experience" class="experience" aria-label="Interactive D3.js precedent study">
+      <canvas id="particle-canvas" aria-hidden="true"></canvas>
+
+      <div class="atmosphere" aria-hidden="true">
+        <span class="atmosphere__line atmosphere__line--one"></span>
+        <span class="atmosphere__line atmosphere__line--two"></span>
+      </div>
+
+      <header class="site-header">
+        <a class="wordmark" href="#intro" data-scene-link="0" aria-label="Return to introduction">
+          <span>D3.JS</span>
+          <small>PRECEDENT STUDY / 2026</small>
+        </a>
+        <div class="site-header__meta">
+          <span>METHODS AS PRACTICES</span>
+          <span>CI SONG</span>
+        </div>
+      </header>
+
+      <section id="scene-layer" class="scene-layer" aria-label="Precedent study chapters"></section>
+
+      <nav class="chapter-rail" aria-label="Chapters">
+        <div class="chapter-rail__track" aria-hidden="true">
+          <span id="rail-progress"></span>
+        </div>
+        <div id="chapter-links" class="chapter-rail__links"></div>
+      </nav>
+
+      <div class="scroll-cue" aria-hidden="true">
+        <span>SCROLL TO ADVANCE</span>
+        <i></i>
+      </div>
+
+      <div class="scene-counter" aria-hidden="true">
+        <span id="scene-current">01</span>
+        <span>/</span>
+        <span id="scene-total">10</span>
+      </div>
+
+      <div id="loader" class="loader" role="status" aria-live="polite">
+        <div class="loader__copy">
+          <span class="loader__label">ASSEMBLING A LIVING DOCUMENT</span>
+          <strong id="loader-progress">0%</strong>
+        </div>
+        <div class="loader__bar"><span id="loader-bar"></span></div>
+      </div>
+    </div>
+
+    <main id="fallback" class="fallback" hidden>
+      <header class="fallback__hero">
+        <p>METHODS AS PRACTICES / PRECEDENT STUDY</p>
+        <h1>D3.js turns data into living documents.</h1>
+        <p>By Ci Song · 2026</p>
+      </header>
+      <nav class="fallback__nav" aria-label="Static chapter navigation">
+        <a href="#fallback-datasheet">Datasheet</a>
+        <a href="#fallback-method">Method</a>
+        <a href="#fallback-history">History</a>
+        <a href="#fallback-ontology">Ontology</a>
+        <a href="#fallback-aesthetic">Aesthetic</a>
+        <a href="#fallback-synthesis">Synthesis</a>
+        <a href="#fallback-sources">Sources</a>
+      </nav>
+      <section id="fallback-datasheet">
+        <p class="fallback__index">01 / DATASHEET</p>
+        <h2>Data-Driven Documents</h2>
+        <p>
+          Created by Mike Bostock in 2011 and introduced in a paper co-authored
+          with Vadim Ogievetsky and Jeffrey Heer, D3 connects data directly to
+          native browser documents.
+        </p>
+        <dl class="fallback__facts">
+          <div><dt>Title</dt><dd>D3 / Data-Driven Documents</dd></div>
+          <div><dt>Creator</dt><dd>Mike Bostock</dd></div>
+          <div><dt>Paper authors</dt><dd>Michael Bostock · Vadim Ogievetsky · Jeffrey Heer</dd></div>
+          <div><dt>Year</dt><dd>2011</dd></div>
+          <div><dt>Format</dt><dd>Free, open-source JavaScript library + IEEE paper</dd></div>
+          <div><dt>Intended users</dt><dd>Developers, visualization practitioners, journalists, researchers, and educators</dd></div>
+        </dl>
+      </section>
+      <section id="fallback-method">
+        <p class="fallback__index">02 / CORE METHOD</p>
+        <h2>Join data. Transform the document.</h2>
+        <p>
+          D3 has no overarching chart abstraction. Data is joined to selected
+          DOM elements; enter, update, and exit describe what should be created,
+          changed, or removed, while transitions and event listeners control
+          motion and response.
+        </p>
+        <p>Data → Select → Join → Enter / Update / Exit → Modify → Interact.</p>
+      </section>
+      <section id="fallback-history">
+        <p class="fallback__index">03–04 / HISTORY + LINEAGE</p>
+        <h2>From toolkits to the native DOM.</h2>
+        <p>
+          Earlier visualization systems used specialized runtimes or
+          toolkit-specific scene graphs. Mike Bostock created D3 in 2011 and
+          co-authored its paper with Vadim Ogievetsky and Jeffrey Heer at
+          Stanford. Prefuse, Flare, and Protovis formed an important lineage;
+          D3's defining shift was to expose the browser's native document
+          representation.
+        </p>
+      </section>
+      <section id="fallback-ontology">
+        <p class="fallback__index">05 / ONTOLOGICAL ANALYSIS</p>
+        <h2>A modular toolbox within a wider network.</h2>
+        <p>
+          D3 comprises modules for data, selections and joins, scales and axes,
+          shapes, layouts, transitions, and interaction. These connect
+          JavaScript and data to DOM, SVG, HTML, or Canvas; documentation,
+          examples, source code, maintainers, and users form the surrounding
+          social infrastructure.
+        </p>
+      </section>
+      <section>
+        <p class="fallback__index">06 / HISTORICAL CONTEXT</p>
+        <h2>The browser becomes the medium.</h2>
+        <p>
+          D3 exposed the browser's native DOM rather than hiding it behind a
+          toolkit-specific scene graph. Practitioners could generate and
+          inspect HTML or SVG, style it with CSS, and update it in response to
+          data and human input.
+        </p>
+      </section>
+      <section id="fallback-aesthetic">
+        <p class="fallback__index">07 / VISUAL + AESTHETIC ANALYSIS</p>
+        <h2>No single style. A procedural language.</h2>
+        <p>
+          D3 has no default presentation. Its visual language is authored
+          through geometry, scales, hierarchy, transitions, and interaction.
+          This flexibility lets a visualization stage comparisons, reveal
+          change, and make the author's encoding choices visible.
+        </p>
+      </section>
+      <section>
+        <p class="fallback__index">08 / COMMUNITY OF PRACTICE</p>
+        <h2>A tool became an ecosystem.</h2>
+        <p>
+          D3 helped bring interactive web visualization into mainstream
+          practice across newsrooms and research. Bostock later co-founded
+          Observable and developed Observable Plot, which is built on D3; Heer
+          later co-developed Vega-Lite, a higher-level grammar for interactive
+          graphics.
+        </p>
+      </section>
+      <section id="fallback-synthesis">
+        <p class="fallback__index">09 / METHOD + RHETORIC</p>
+        <h2>D3 argues for transparent representation.</h2>
+        <p>
+          Methodologically, D3 joins data to native DOM elements and evaluates
+          transformations immediately. Rhetorically, exposing representation
+          improves expressiveness, inspection, and interoperability. In Bostock
+          and Heer's wider practice, D3 follows Prefuse, Flare, and Protovis and
+          precedes Observable Plot and Vega-Lite.
+        </p>
+        <p>
+          <strong>My assessment:</strong> D3's low-level control makes bespoke
+          visualization unusually expressive, but shifts authoring, learning,
+          and accessibility responsibility to the practitioner.
+        </p>
+        <p class="fallback__relation">
+          Data ↔ Selections ↔ DOM ↔ Visual form ↔ Viewer<br />
+          Examples ↔ Documentation ↔ Community ↔ Source code
+        </p>
+      </section>
+      <section id="fallback-sources">
+        <p class="fallback__index">10 / BIBLIOGRAPHY</p>
+        <h2>Author / project sources</h2>
+        <ul>
+          <li><a href="https://idl.uw.edu/papers/d3">D3: Data-Driven Documents · 2011</a></li>
+          <li><a href="https://d3js.org/what-is-d3">What is D3? · Official documentation</a></li>
+          <li><a href="https://github.com/d3/d3">D3 source code · GitHub</a></li>
+          <li><a href="https://bost.ocks.org/mike/join/">Thinking with Joins · Mike Bostock</a></li>
+          <li><a href="https://observablehq.com/@mbostock/10-years-of-open-source-visualization">10 Years of Open-Source Visualization</a></li>
+        </ul>
+        <h2>Sources by others</h2>
+        <ul>
+          <li><a href="https://ieeevis.org/year/2021/info/awards/test-of-time-awards">IEEE VIS Test of Time Award · 2021</a></li>
+          <li><a href="https://policyviz.com/podcast/episode-175-mike-bostock/">PolicyViz interview · Mike Bostock</a></li>
+          <li><a href="https://arxiv.org/abs/2207.06554">How learners use D3 · independent study</a></li>
+          <li><a href="https://idl.uw.edu/papers/protovis">Protovis · research paper</a></li>
+          <li><a href="https://idl.uw.edu/papers/vega-lite">Vega-Lite · research paper</a></li>
+        </ul>
+      </section>
+    </main>
+
+    <noscript>
+      <p class="noscript">This experience requires JavaScript. Please enable it to view the particle narrative.</p>
+    </noscript>
+
+    <script>
+      window.setTimeout(() => {
+        const loader = document.querySelector("#loader");
+        const fallback = document.querySelector("#fallback");
+        if (loader && !loader.classList.contains("is-complete") && fallback?.hidden) {
+          document.documentElement.classList.add("fallback-mode");
+          document.querySelector("#experience").hidden = true;
+          fallback.hidden = false;
+        }
+      }, 12000);
+    </script>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

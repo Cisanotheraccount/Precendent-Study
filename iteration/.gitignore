@@ -1,0 +1,7 @@
+# Internal reconstruction and visual QA evidence are intentionally local-only.
+RECON/
+qa/
+NOTES.md
+design-qa.md
+assets/README.md
+assets/stanford-block-s-black.png
