@@ -71,7 +71,7 @@ const SCENES = [
     layout: "ontology-logo",
     camera: [-0.22, 0.12, 9.7],
     rotation: [0.04, -0.08, 0],
-    spinMode: "readable",
+    spinMode: "z-only",
     pointScale: 0.72,
     ambientMotion: "specimen",
     mobileY: 0.72,
@@ -161,8 +161,13 @@ const WORKFLOW_NODES = [
 
 const ONTOLOGY_INDEX = SCENES.findIndex((scene) => scene.id === "ontology");
 const ONTOLOGY_Z_SWING = Math.PI / 4;
+const LOGO_DESKTOP_SCALE = 6.2;
+const LOGO_MOBILE_SCALE = 6.9;
 const ONTOLOGY_MOBILE_LAYOUT_SCALE = 0.68;
 const ONTOLOGY_MOBILE_LAYOUT_Y = 0.7;
+const ONTOLOGY_MOBILE_ANCHOR_SCALE = (
+  ONTOLOGY_MOBILE_LAYOUT_SCALE * LOGO_MOBILE_SCALE / LOGO_DESKTOP_SCALE
+);
 const ONTOLOGY_CALLOUTS = [
   {
     id: "document",
@@ -180,7 +185,7 @@ const ONTOLOGY_CALLOUTS = [
   },
   {
     id: "data",
-    anchor: [-1.8, -0.82, 0.3],
+    anchor: [-0.55, -0.82, 0.3],
     side: "left",
     yOffset: -46,
     mobileYOffset: -18,
@@ -1257,8 +1262,7 @@ function updateScene(sceneIndex, localProgress, force = false) {
     THREE.MathUtils.lerp(scene.camera[2], next.camera[2], eased),
   );
   particlePoints.rotation.set(
-    THREE.MathUtils.lerp(scene.rotation[0], next.rotation[0], eased)
-      + ontologyPresence * Math.sin(state.visualTime * 0.31 + 0.8) * 0.075,
+    THREE.MathUtils.lerp(scene.rotation[0], next.rotation[0], eased),
     lerpAngle(scene.rotation[1] + sceneSpin(scene), next.rotation[1] + sceneSpin(next), eased),
     THREE.MathUtils.lerp(scene.rotation[2], next.rotation[2], eased)
       - ontologyPresence * Math.sin(state.visualTime * 0.18) * ONTOLOGY_Z_SWING,
@@ -1331,10 +1335,9 @@ function updateOntologyOverlay(presence) {
 
     ontologyProjectedAnchor.copy(callout.localAnchor);
     if (isMobile) {
-      ontologyProjectedAnchor.x *= ONTOLOGY_MOBILE_LAYOUT_SCALE;
-      ontologyProjectedAnchor.y = (
-        ontologyProjectedAnchor.y - ONTOLOGY_MOBILE_LAYOUT_Y
-      ) * ONTOLOGY_MOBILE_LAYOUT_SCALE + ONTOLOGY_MOBILE_LAYOUT_Y;
+      ontologyProjectedAnchor.x *= ONTOLOGY_MOBILE_ANCHOR_SCALE;
+      ontologyProjectedAnchor.y = ontologyProjectedAnchor.y
+        * ONTOLOGY_MOBILE_ANCHOR_SCALE + ONTOLOGY_MOBILE_LAYOUT_Y;
       ontologyProjectedAnchor.z *= ONTOLOGY_MOBILE_LAYOUT_SCALE;
     }
     ontologyProjectedAnchor
@@ -1442,6 +1445,7 @@ function updateOntologyOverlay(presence) {
 }
 
 function sceneSpin(scene) {
+  if (scene.spinMode === "z-only") return 0;
   if (scene.spinMode === "readable") return Math.sin(state.objectSpin * 2.4) * 0.055;
   if (scene.spinMode === "showcase") return Math.sin(state.objectSpin * 2.65) * 0.23;
   if (scene.spinMode === "specimen") return wrapAngle(state.objectSpin * 0.46) + Math.sin(state.visualTime * 0.37) * 0.08;
@@ -1540,11 +1544,12 @@ function logoLayout(count, image) {
   if (candidates.length < 400) return textLayout(count, ["D3"], 220);
 
   const points = new Float32Array(count * 3);
+  const logoScale = isMobile ? LOGO_MOBILE_SCALE : LOGO_DESKTOP_SCALE;
   for (let i = 0; i < count; i += 1) {
     const [x, y] = candidates[Math.floor(Math.random() * candidates.length)];
     const depth = gaussian() * 0.35;
-    points[i * 3] = (x / 320 - 0.5) * (isMobile ? 6.9 : 6.2) + gaussian() * 0.025;
-    points[i * 3 + 1] = -(y / 320 - 0.5) * (isMobile ? 6.9 : 6.2) + gaussian() * 0.025 + (isMobile ? 0.7 : 0);
+    points[i * 3] = (x / 320 - 0.5) * logoScale + gaussian() * 0.025;
+    points[i * 3 + 1] = -(y / 320 - 0.5) * logoScale + gaussian() * 0.025 + (isMobile ? 0.7 : 0);
     points[i * 3 + 2] = depth;
   }
   return points;
