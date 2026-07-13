@@ -164,6 +164,9 @@ const ONTOLOGY_BLENDER_Z_SWING = Math.PI / 4;
 const ONTOLOGY_BLENDER_Z_SPEED = 0.045;
 const LOGO_DESKTOP_SCALE = 6.2;
 const LOGO_MOBILE_SCALE = 6.9;
+const ONTOLOGY_LOGO_EDGE_JITTER = 0.012;
+const ONTOLOGY_LOGO_DEPTH_SPREAD = 0.18;
+const ONTOLOGY_LOGO_DEPTH_LIMIT = 0.43;
 const ONTOLOGY_MOBILE_LAYOUT_SCALE = 0.68;
 const ONTOLOGY_MOBILE_LAYOUT_Y = 0.7;
 const ONTOLOGY_MOBILE_ANCHOR_SCALE = (
@@ -580,11 +583,11 @@ function createParticleField() {
         // the force simulation that controls cursor scattering and recovery.
         vec3 specimenNormal = normalize(rest + vec3(0.0001));
         float specimenWave =
-          sin(rest.y * 2.15 + rest.z * 1.3 + uTime * 1.05 + aSeed * 2.2) * 0.075 +
-          sin(rest.x * 3.35 - rest.y * 0.72 - uTime * 0.74 + aSeed * 5.7) * 0.045;
+          sin(rest.y * 2.15 + rest.z * 1.3 + uTime * 1.05 + aSeed * 2.2) * 0.038 +
+          sin(rest.x * 3.35 - rest.y * 0.72 - uTime * 0.74 + aSeed * 5.7) * 0.022;
         p += specimenNormal * specimenWave * uSpecimenPresence;
-        p.x += sin(rest.y * 1.42 + uTime * 0.58) * 0.045 * uSpecimenPresence;
-        p.z += cos(rest.x * 1.76 - uTime * 0.46) * 0.035 * uSpecimenPresence;
+        p.x += sin(rest.y * 1.42 + uTime * 0.58) * 0.020 * uSpecimenPresence;
+        p.z += cos(rest.x * 1.76 - uTime * 0.46) * 0.016 * uSpecimenPresence;
 
         vVelocity = smoothstep(0.018, 0.22, velocityData.w);
         vMotionAlpha = mix(1.0, 0.78, vVelocity * 0.55);
@@ -1544,7 +1547,11 @@ function scatterLayout(count, spread = 1) {
   return points;
 }
 
-function logoLayout(count, image) {
+function logoLayout(
+  count,
+  image,
+  { edgeJitter = 0.025, depthSpread = 0.35, depthLimit = Number.POSITIVE_INFINITY } = {},
+) {
   const canvas = document.createElement("canvas");
   canvas.width = 320;
   canvas.height = 320;
@@ -1568,16 +1575,20 @@ function logoLayout(count, image) {
   const logoScale = isMobile ? LOGO_MOBILE_SCALE : LOGO_DESKTOP_SCALE;
   for (let i = 0; i < count; i += 1) {
     const [x, y] = candidates[Math.floor(Math.random() * candidates.length)];
-    const depth = gaussian() * 0.35;
-    points[i * 3] = (x / 320 - 0.5) * logoScale + gaussian() * 0.025;
-    points[i * 3 + 1] = -(y / 320 - 0.5) * logoScale + gaussian() * 0.025 + (isMobile ? 0.7 : 0);
+    const depth = THREE.MathUtils.clamp(gaussian() * depthSpread, -depthLimit, depthLimit);
+    points[i * 3] = (x / 320 - 0.5) * logoScale + gaussian() * edgeJitter;
+    points[i * 3 + 1] = -(y / 320 - 0.5) * logoScale + gaussian() * edgeJitter + (isMobile ? 0.7 : 0);
     points[i * 3 + 2] = depth;
   }
   return points;
 }
 
 function ontologyLogoLayout(count, image) {
-  const points = logoLayout(count, image);
+  const points = logoLayout(count, image, {
+    edgeJitter: ONTOLOGY_LOGO_EDGE_JITTER,
+    depthSpread: ONTOLOGY_LOGO_DEPTH_SPREAD,
+    depthLimit: ONTOLOGY_LOGO_DEPTH_LIMIT,
+  });
   if (!isMobile) return points;
 
   for (let i = 0; i < count; i += 1) {
