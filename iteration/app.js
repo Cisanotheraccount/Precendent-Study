@@ -26,7 +26,6 @@ const SCENES = [
     layout: "workflow",
     camera: [0.35, 0.05, 9.8],
     rotation: [0, 0, 0],
-    spinMode: "readable",
     pointScale: 0.42,
     accent: 0.62,
     extra: "workflow",
@@ -41,7 +40,6 @@ const SCENES = [
     layout: "retro-computer",
     camera: [-0.3, 0.16, 10.4],
     rotation: [0.1, -0.22, -0.015],
-    spinMode: "showcase",
     pointScale: 0.62,
     accent: 0.12,
   },
@@ -56,7 +54,6 @@ const SCENES = [
     layout: "stanford-lineage",
     camera: [0.4, -0.12, 9.4],
     rotation: [0, 0, 0],
-    spinMode: "readable",
     pointScale: 0.48,
     accent: 0.42,
     extra: "facts",
@@ -71,9 +68,7 @@ const SCENES = [
     layout: "ontology-logo",
     camera: [-0.22, 0.12, 9.7],
     rotation: [0, 0, 0],
-    spinMode: "blender-z",
     pointScale: 0.72,
-    ambientMotion: "specimen",
     mobileY: 0.72,
     accent: 0.48,
   },
@@ -160,8 +155,8 @@ const WORKFLOW_NODES = [
 ];
 
 const ONTOLOGY_INDEX = SCENES.findIndex((scene) => scene.id === "ontology");
-const ONTOLOGY_BLENDER_Z_SWING = Math.PI / 4;
-const ONTOLOGY_BLENDER_Z_SPEED = 0.045;
+const SHARED_VERTICAL_SWING = Math.PI / 4;
+const SHARED_VERTICAL_SPEED = 0.045;
 const LOGO_DESKTOP_SCALE = 6.2;
 const LOGO_MOBILE_SCALE = 6.9;
 const ONTOLOGY_LOGO_EDGE_JITTER = 0.012;
@@ -248,7 +243,6 @@ const state = {
   lastSplatAt: 0,
   forceTriggerArmed: true,
   pointerHasSample: false,
-  objectSpin: 0,
   visualTime: 0,
   touchY: null,
   touchStartedInCard: false,
@@ -548,7 +542,7 @@ function createParticleField() {
       uPointSize: { value: baseParticlePointSize },
       uOpacity: { value: 0.82 },
       uTime: { value: 0 },
-      uSpecimenPresence: { value: 0 },
+      uAmbientMotion: { value: 1 },
     },
     vertexShader: `
       in float aSeed;
@@ -561,7 +555,7 @@ function createParticleField() {
       uniform float uMorph;
       uniform float uPointSize;
       uniform float uTime;
-      uniform float uSpecimenPresence;
+      uniform float uAmbientMotion;
 
       varying float vVelocity;
       varying float vMotionAlpha;
@@ -578,16 +572,16 @@ function createParticleField() {
         vec3 rest = mix(layoutFrom.xyz, layoutTo.xyz, morphProgress(uMorph));
         vec3 p = rest + offsetData.xyz;
 
-        // The ontology specimen is a living volume rather than a static icon.
-        // Low-amplitude, non-repeating waves move its surface without bypassing
-        // the force simulation that controls cursor scattering and recovery.
+        // Every chapter shares the same living, low-amplitude surface motion.
+        // It remains separate from the force simulation that controls cursor
+        // scattering, page-transition turbulence, and elastic recovery.
         vec3 specimenNormal = normalize(rest + vec3(0.0001));
         float specimenWave =
           sin(rest.y * 2.15 + rest.z * 1.3 + uTime * 1.05 + aSeed * 2.2) * 0.038 +
           sin(rest.x * 3.35 - rest.y * 0.72 - uTime * 0.74 + aSeed * 5.7) * 0.022;
-        p += specimenNormal * specimenWave * uSpecimenPresence;
-        p.x += sin(rest.y * 1.42 + uTime * 0.58) * 0.020 * uSpecimenPresence;
-        p.z += cos(rest.x * 1.76 - uTime * 0.46) * 0.016 * uSpecimenPresence;
+        p += specimenNormal * specimenWave * uAmbientMotion;
+        p.x += sin(rest.y * 1.42 + uTime * 0.58) * 0.020 * uAmbientMotion;
+        p.z += cos(rest.x * 1.76 - uTime * 0.46) * 0.016 * uAmbientMotion;
 
         vVelocity = smoothstep(0.018, 0.22, velocityData.w);
         vMotionAlpha = mix(1.0, 0.78, vVelocity * 0.55);
@@ -889,8 +883,16 @@ function writeLayoutTexture(texture, layout) {
 
 function renderLoaderParticles(time) {
   if (state.ready || !renderer || !world || !particlePoints) return;
-  particlePoints.rotation.y = time * 0.000035;
-  particlePoints.rotation.x = Math.sin(time * 0.00018) * 0.06;
+  const visualTime = time * 0.001;
+  const sharedVerticalRotation = -Math.sin(visualTime * SHARED_VERTICAL_SPEED) * SHARED_VERTICAL_SWING;
+  const bob = Math.sin(visualTime * 0.62 + 0.4) * 0.13;
+  const breatheX = Math.sin(visualTime * 0.52) * 0.026;
+  const breatheY = Math.sin(visualTime * 0.43 + 1.6) * 0.032;
+  const breatheZ = Math.sin(visualTime * 0.58 + 3.1) * 0.024;
+  particlePoints.rotation.set(0, sharedVerticalRotation, 0);
+  particlePoints.position.y = bob;
+  particlePoints.scale.set(1 + breatheX, 1 + breatheY, 1 + breatheZ);
+  material.uniforms.uTime.value = visualTime;
   renderer.render(world, camera);
   requestAnimationFrame(renderLoaderParticles);
 }
@@ -1117,7 +1119,6 @@ function tick(time) {
     }
   }
 
-  state.objectSpin += dt * 0.11;
   state.visualTime = time * 0.001;
 
   const scaled = wrap01(state.progress + 0.0000001) * SCENES.length;
@@ -1267,32 +1268,32 @@ function updateScene(sceneIndex, localProgress, force = false) {
     THREE.MathUtils.lerp(scene.camera[1], next.camera[1], eased),
     THREE.MathUtils.lerp(scene.camera[2], next.camera[2], eased),
   );
-  // Blender's vertical Z axis maps to Three.js's vertical Y axis.
-  const ontologyBlenderZRotation = -ontologyPresence
-    * Math.sin(state.visualTime * ONTOLOGY_BLENDER_Z_SPEED)
-    * ONTOLOGY_BLENDER_Z_SWING;
+  // Blender's vertical Z axis maps to Three.js's vertical Y axis. Every
+  // chapter uses the same slow, bounded rotation so the motion language stays
+  // continuous while its particle layout changes.
+  const sharedVerticalRotation = -Math.sin(state.visualTime * SHARED_VERTICAL_SPEED)
+    * SHARED_VERTICAL_SWING;
   particlePoints.rotation.set(
     THREE.MathUtils.lerp(scene.rotation[0], next.rotation[0], eased),
-    lerpAngle(scene.rotation[1] + sceneSpin(scene), next.rotation[1] + sceneSpin(next), eased)
-      + ontologyBlenderZRotation,
+    lerpAngle(scene.rotation[1], next.rotation[1], eased) + sharedVerticalRotation,
     THREE.MathUtils.lerp(scene.rotation[2], next.rotation[2], eased),
   );
   particlePoints.position.set(
     ontologyPresence * (isMobile ? 0 : 0.7),
-    mobileLift + ontologyPresence * bob,
+    mobileLift + bob,
     0,
   );
   particlePoints.scale.set(
-    1 + ontologyPresence * breatheX,
-    1 + ontologyPresence * breatheY,
-    1 + ontologyPresence * breatheZ,
+    1 + breatheX,
+    1 + breatheY,
+    1 + breatheZ,
   );
   material.uniforms.uPointSize.value = baseParticlePointSize * THREE.MathUtils.lerp(
     scene.pointScale ?? 1,
     next.pointScale ?? 1,
     eased,
   );
-  material.uniforms.uSpecimenPresence.value = ontologyPresence;
+  material.uniforms.uAmbientMotion.value = 1;
   updateOntologyOverlay(ontologyPresence);
   sceneCards.forEach((card, index) => {
     const distance = circularSceneDistance(index, sceneIndex, localProgress);
@@ -1468,14 +1469,6 @@ function updateOntologyOverlay(presence) {
       `M${(anchorX - 7).toFixed(1)} ${anchorY.toFixed(1)}h14M${anchorX.toFixed(1)} ${(anchorY - 7).toFixed(1)}v14`,
     );
   });
-}
-
-function sceneSpin(scene) {
-  if (scene.spinMode === "blender-z") return 0;
-  if (scene.spinMode === "readable") return Math.sin(state.objectSpin * 2.4) * 0.055;
-  if (scene.spinMode === "showcase") return Math.sin(state.objectSpin * 2.65) * 0.23;
-  if (scene.spinMode === "specimen") return wrapAngle(state.objectSpin * 0.46) + Math.sin(state.visualTime * 0.37) * 0.08;
-  return wrapAngle(state.objectSpin);
 }
 
 function wrapAngle(angle) {
