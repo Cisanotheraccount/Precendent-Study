@@ -71,7 +71,7 @@ const SCENES = [
     layout: "ontology-logo",
     camera: [-0.22, 0.12, 9.7],
     rotation: [0, 0, 0],
-    spinMode: "z-only",
+    spinMode: "blender-z",
     pointScale: 0.72,
     ambientMotion: "specimen",
     mobileY: 0.72,
@@ -160,7 +160,8 @@ const WORKFLOW_NODES = [
 ];
 
 const ONTOLOGY_INDEX = SCENES.findIndex((scene) => scene.id === "ontology");
-const ONTOLOGY_Z_SWING = Math.PI / 4;
+const ONTOLOGY_BLENDER_Z_SWING = Math.PI / 4;
+const ONTOLOGY_BLENDER_Z_SPEED = 0.045;
 const LOGO_DESKTOP_SCALE = 6.2;
 const LOGO_MOBILE_SCALE = 6.9;
 const ONTOLOGY_MOBILE_LAYOUT_SCALE = 0.68;
@@ -1261,11 +1262,15 @@ function updateScene(sceneIndex, localProgress, force = false) {
     THREE.MathUtils.lerp(scene.camera[1], next.camera[1], eased),
     THREE.MathUtils.lerp(scene.camera[2], next.camera[2], eased),
   );
+  // Blender's vertical Z axis maps to Three.js's vertical Y axis.
+  const ontologyBlenderZRotation = -ontologyPresence
+    * Math.sin(state.visualTime * ONTOLOGY_BLENDER_Z_SPEED)
+    * ONTOLOGY_BLENDER_Z_SWING;
   particlePoints.rotation.set(
     THREE.MathUtils.lerp(scene.rotation[0], next.rotation[0], eased),
-    lerpAngle(scene.rotation[1] + sceneSpin(scene), next.rotation[1] + sceneSpin(next), eased),
-    THREE.MathUtils.lerp(scene.rotation[2], next.rotation[2], eased)
-      - ontologyPresence * Math.sin(state.visualTime * 0.18) * ONTOLOGY_Z_SWING,
+    lerpAngle(scene.rotation[1] + sceneSpin(scene), next.rotation[1] + sceneSpin(next), eased)
+      + ontologyBlenderZRotation,
+    THREE.MathUtils.lerp(scene.rotation[2], next.rotation[2], eased),
   );
   particlePoints.position.set(
     ontologyPresence * (isMobile ? 0 : 0.7),
@@ -1461,7 +1466,7 @@ function updateOntologyOverlay(presence) {
 }
 
 function sceneSpin(scene) {
-  if (scene.spinMode === "z-only") return 0;
+  if (scene.spinMode === "blender-z") return 0;
   if (scene.spinMode === "readable") return Math.sin(state.objectSpin * 2.4) * 0.055;
   if (scene.spinMode === "showcase") return Math.sin(state.objectSpin * 2.65) * 0.23;
   if (scene.spinMode === "specimen") return wrapAngle(state.objectSpin * 0.46) + Math.sin(state.visualTime * 0.37) * 0.08;
