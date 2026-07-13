@@ -235,13 +235,8 @@ const state = {
   inputLockedUntil: 0,
   pointerTarget: new THREE.Vector2(9, 9),
   pointerSample: new THREE.Vector2(),
-  pointerInputVelocity: new THREE.Vector2(),
-  pointerVelocity: new THREE.Vector2(),
-  pointerAcceleration: new THREE.Vector2(),
-  pointerDelta: new THREE.Vector2(),
+  pointerSpeed: 0,
   pointerLastEventAt: 0,
-  lastSplatAt: 0,
-  forceTriggerArmed: true,
   pointerHasSample: false,
   visualTime: 0,
   touchY: null,
@@ -269,6 +264,7 @@ let world;
 let particlePoints;
 let material;
 let simulation;
+let pointerFlow;
 let layouts = [];
 let layoutTextures = [];
 let sceneCards = [];
@@ -281,25 +277,15 @@ let animationFrameId = 0;
 const ontologyProjectedAnchor = new THREE.Vector3();
 const ontologyProjectedCenter = new THREE.Vector3();
 
-const MAX_FORCE_SPLATS = 6;
-const forceSplats = Array.from({ length: MAX_FORCE_SPLATS }, () => ({
-  center: new THREE.Vector2(9, 9),
-  force: new THREE.Vector2(),
-  strength: 0,
-  peak: 0,
-  age: 99,
-}));
-let forceSplatCursor = 0;
 let simulationAccumulator = 0;
 
 const simulationMvp = new THREE.Matrix4();
 const simulationViewModel = new THREE.Matrix4();
 const inverseObjectRotation = new THREE.Matrix4();
 const screenToLocal = new THREE.Matrix3();
-const pointerRawVelocity = new THREE.Vector2();
-const pointerPreviousVelocity = new THREE.Vector2();
-const pointerFrameAcceleration = new THREE.Vector2();
-const pointerForceDirection = new THREE.Vector2();
+const pointerFlowStart = new THREE.Vector2();
+const pointerFlowEnd = new THREE.Vector2();
+const pointerFlowDelta = new THREE.Vector2();
 
 sceneTotal.textContent = String(SCENES.length).padStart(2, "0");
 
@@ -503,6 +489,9 @@ function setupRenderer() {
 }
 
 function createParticleField() {
+  const hasFloatTargets = renderer.extensions.has("EXT_color_buffer_float");
+  if (!hasFloatTargets) throw new Error("This particle simulation requires floating-point render targets.");
+
   const textureSize = Math.ceil(Math.sqrt(particleCount));
   const geometry = new THREE.BufferGeometry();
   const positions = new Float32Array(particleCount * 3);
@@ -526,6 +515,7 @@ function createParticleField() {
     }
   `;
 
+  pointerFlow = createPointerFlowSimulation();
   simulation = createParticleSimulation(textureSize, morphGlsl);
 
   material = new THREE.ShaderMaterial({
@@ -588,11 +578,14 @@ function createParticleField() {
         vec3 macroNormal = normalize(mat3(modelMatrix) * normalize(p + vec3(0.0001)));
         vec3 worldLightDirection = normalize(vec3(1.0, 1.0, 1.0));
         vSurfaceLight = clamp(0.46 + dot(macroNormal, worldLightDirection) * 0.54, 0.06, 1.0);
-        vInteraction = max(offsetData.w, vVelocity);
+        // Cursor excitation has its own short afterglow. Particle velocity still
+        // enlarges moving grains, but no longer keeps the whole path white long
+        // after the directional impulse has passed.
+        vInteraction = max(offsetData.w, vVelocity * 0.18);
 
         vec4 mvPosition = modelViewMatrix * vec4(p, 1.0);
         gl_Position = projectionMatrix * mvPosition;
-        float sizePulse = 0.92 + vVelocity * 0.16;
+        float sizePulse = 0.92 + vVelocity * 0.28;
         gl_PointSize = uPointSize * (25.0 / max(1.0, -mvPosition.z)) * (0.78 + aSeed * 0.54) * sizePulse;
       }
     `,
@@ -640,10 +633,150 @@ function createParticleField() {
   requestAnimationFrame(renderLoaderParticles);
 }
 
-function createParticleSimulation(textureSize, morphGlsl) {
-  const hasFloatTargets = renderer.extensions.has("EXT_color_buffer_float");
-  if (!hasFloatTargets) throw new Error("This particle simulation requires floating-point render targets.");
+function createPointerFlowSimulation() {
+  const size = isMobile ? 64 : 128;
+  const makeTarget = () => {
+    const target = new THREE.WebGLRenderTarget(size, size, {
+      type: THREE.HalfFloatType,
+      format: THREE.RGBAFormat,
+      minFilter: THREE.LinearFilter,
+      magFilter: THREE.LinearFilter,
+      wrapS: THREE.ClampToEdgeWrapping,
+      wrapT: THREE.ClampToEdgeWrapping,
+      depthBuffer: false,
+      stencilBuffer: false,
+      generateMipmaps: false,
+    });
+    target.texture.name = "Pointer velocity field";
+    target.texture.colorSpace = THREE.NoColorSpace;
+    target.texture.generateMipmaps = false;
+    return target;
+  };
 
+  const targets = [makeTarget(), makeTarget()];
+  const scene = new THREE.Scene();
+  const flowCamera = new THREE.Camera();
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array([
+    -1, -1, 0,
+    3, -1, 0,
+    -1, 3, 0,
+  ]), 3));
+
+  const flowMaterial = new THREE.ShaderMaterial({
+    glslVersion: THREE.GLSL3,
+    depthTest: false,
+    depthWrite: false,
+    uniforms: {
+      tVelocity: { value: targets[0].texture },
+      uTexelSize: { value: new THREE.Vector2(1 / size, 1 / size) },
+      uDelta: { value: 1 / 60 },
+      uAspect: { value: window.innerWidth / window.innerHeight },
+      uSplatStart: { value: new THREE.Vector2() },
+      uSplatEnd: { value: new THREE.Vector2() },
+      uSplatForce: { value: new THREE.Vector2() },
+      uSplatActive: { value: 0 },
+    },
+    vertexShader: `
+      void main() {
+        gl_Position = vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: `
+      precision highp float;
+      precision highp sampler2D;
+
+      uniform sampler2D tVelocity;
+      uniform vec2 uTexelSize;
+      uniform float uDelta;
+      uniform float uAspect;
+      uniform vec2 uSplatStart;
+      uniform vec2 uSplatEnd;
+      uniform vec2 uSplatForce;
+      uniform float uSplatActive;
+
+      out vec4 fragColor;
+
+      float distanceToSegment(vec2 point, vec2 start, vec2 end) {
+        vec2 pa = point - start;
+        vec2 ba = end - start;
+        float amount = clamp(dot(pa, ba) / max(dot(ba, ba), 0.000001), 0.0, 1.0);
+        return length(pa - ba * amount);
+      }
+
+      void main() {
+        vec2 uv = gl_FragCoord.xy * uTexelSize;
+        float frameRatio = clamp(uDelta * 60.0, 0.0, 2.0);
+
+        vec4 previousSample = texture(tVelocity, uv);
+        vec2 previous = previousSample.xy;
+        vec2 advectionVelocity = vec2(previous.x / max(uAspect, 0.0001), previous.y);
+        vec2 backUv = clamp(uv - advectionVelocity * uDelta * 0.24, vec2(0.0), vec2(1.0));
+        vec4 advectedSample = texture(tVelocity, backUv);
+        vec2 velocity = advectedSample.xy;
+        float wake = advectedSample.z;
+        float hold = advectedSample.w;
+
+        vec2 left = texture(tVelocity, clamp(backUv - vec2(uTexelSize.x, 0.0), vec2(0.0), vec2(1.0))).xy;
+        vec2 right = texture(tVelocity, clamp(backUv + vec2(uTexelSize.x, 0.0), vec2(0.0), vec2(1.0))).xy;
+        vec2 bottom = texture(tVelocity, clamp(backUv - vec2(0.0, uTexelSize.y), vec2(0.0), vec2(1.0))).xy;
+        vec2 top = texture(tVelocity, clamp(backUv + vec2(0.0, uTexelSize.y), vec2(0.0), vec2(1.0))).xy;
+        vec2 neighborFlow = (left + right + bottom + top) * 0.25;
+        velocity = mix(velocity, neighborFlow, min(0.12, 0.055 * frameRatio));
+        velocity *= pow(0.965, frameRatio);
+        wake *= pow(0.88, frameRatio);
+        hold *= pow(0.985, frameRatio);
+
+        vec2 point = uv;
+        vec2 start = uSplatStart;
+        vec2 end = uSplatEnd;
+        point.x *= uAspect;
+        start.x *= uAspect;
+        end.x *= uAspect;
+        float radius = 0.22;
+        float lineFalloff = clamp(1.0 - distanceToSegment(point, start, end) / radius, 0.0, 1.0);
+        lineFalloff = lineFalloff * lineFalloff * lineFalloff;
+        float splat = lineFalloff * uSplatActive;
+        velocity += uSplatForce * splat;
+        float splatEnergy = clamp(length(uSplatForce) * 0.78, 0.0, 1.0);
+        wake = max(wake, splat * splatEnergy);
+        hold = max(hold, splat * splatEnergy);
+
+        float speed = length(velocity);
+        if (speed > 2.0) velocity *= 2.0 / speed;
+        fragColor = vec4(velocity, wake, hold);
+      }
+    `,
+  });
+
+  const quad = new THREE.Mesh(geometry, flowMaterial);
+  quad.frustumCulled = false;
+  scene.add(quad);
+
+  const previousTarget = renderer.getRenderTarget();
+  const previousColor = new THREE.Color();
+  renderer.getClearColor(previousColor);
+  const previousAlpha = renderer.getClearAlpha();
+  targets.forEach((target) => {
+    renderer.setRenderTarget(target);
+    renderer.setClearColor(0x000000, 0);
+    renderer.clear(true, false, false);
+  });
+  renderer.setRenderTarget(previousTarget);
+  renderer.setClearColor(previousColor, previousAlpha);
+
+  return {
+    size,
+    targets,
+    readIndex: 0,
+    currentTexture: targets[0].texture,
+    scene,
+    camera: flowCamera,
+    material: flowMaterial,
+  };
+}
+
+function createParticleSimulation(textureSize, morphGlsl) {
   const layoutFrom = createLayoutTexture(textureSize);
   const layoutTo = createLayoutTexture(textureSize);
   writeLayoutTexture(layoutFrom, layouts[0]);
@@ -681,9 +814,6 @@ function createParticleSimulation(textureSize, morphGlsl) {
     -1, 3, 0,
   ]), 3));
 
-  const splatCenters = forceSplats.map((splat) => splat.center);
-  const splatForces = forceSplats.map((splat) => splat.force);
-  const splatStrengths = new Float32Array(MAX_FORCE_SPLATS);
   const computeMaterial = new THREE.ShaderMaterial({
     glslVersion: THREE.GLSL3,
     depthTest: false,
@@ -693,6 +823,7 @@ function createParticleSimulation(textureSize, morphGlsl) {
       tVelocity: { value: targets[0].textures[1] },
       tLayoutFrom: { value: layoutFrom },
       tLayoutTo: { value: layoutTo },
+      tPointerFlow: { value: pointerFlow.currentTexture },
       uMorph: { value: 0 },
       uDelta: { value: 1 / 60 },
       uTime: { value: 0 },
@@ -700,10 +831,6 @@ function createParticleSimulation(textureSize, morphGlsl) {
       uParticleCount: { value: particleCount },
       uMvp: { value: new THREE.Matrix4() },
       uScreenToLocal: { value: new THREE.Matrix3() },
-      uAspect: { value: window.innerWidth / window.innerHeight },
-      uSplatCenters: { value: splatCenters },
-      uSplatForces: { value: splatForces },
-      uSplatStrengths: { value: splatStrengths },
     },
     vertexShader: `
       void main() {
@@ -718,6 +845,7 @@ function createParticleSimulation(textureSize, morphGlsl) {
       uniform sampler2D tVelocity;
       uniform sampler2D tLayoutFrom;
       uniform sampler2D tLayoutTo;
+      uniform sampler2D tPointerFlow;
       uniform float uMorph;
       uniform float uDelta;
       uniform float uTime;
@@ -725,10 +853,6 @@ function createParticleSimulation(textureSize, morphGlsl) {
       uniform int uParticleCount;
       uniform mat4 uMvp;
       uniform mat3 uScreenToLocal;
-      uniform float uAspect;
-      uniform vec2 uSplatCenters[${MAX_FORCE_SPLATS}];
-      uniform vec2 uSplatForces[${MAX_FORCE_SPLATS}];
-      uniform float uSplatStrengths[${MAX_FORCE_SPLATS}];
 
       layout(location = 0) out vec4 outOffset;
       layout(location = 1) out vec4 outVelocity;
@@ -772,48 +896,47 @@ function createParticleSimulation(textureSize, morphGlsl) {
         vec3 particlePosition = rest + offset;
         float dt = clamp(uDelta, 0.0, 0.0333333);
         float seed = hash12(vec2(pixel));
-        float response = 0.76 + seed * 0.48;
+        float response = 0.52 + seed * 1.0;
 
         vec4 clip = uMvp * vec4(particlePosition, 1.0);
         vec2 ndc = clip.xy / max(abs(clip.w), 0.0001);
-        vec3 interactionForce = vec3(0.0);
-        float interactionAmount = 0.0;
-
-        for (int i = 0; i < ${MAX_FORCE_SPLATS}; i++) {
-          vec2 delta = ndc - uSplatCenters[i];
-          delta.x *= uAspect;
-          float distanceSquared = dot(delta, delta);
-          float core = exp(-distanceSquared * 32.0);
-          float feather = exp(-distanceSquared * 10.0);
-          float influence = (core * 0.78 + feather * 0.22) * uSplatStrengths[i];
-          vec3 localDirection = uScreenToLocal * vec3(uSplatForces[i], 0.0);
-          interactionForce += localDirection * influence;
-          interactionAmount = max(interactionAmount, influence);
-        }
-
+        vec2 flowUv = clamp(ndc * 0.5 + 0.5, vec2(0.0), vec2(1.0));
+        vec4 pointerFlowData = texture(tPointerFlow, flowUv);
+        vec2 pointerVelocity = pointerFlowData.xy;
+        float pointerSpeed = length(pointerVelocity);
+        float interactionAmount = smoothstep(0.04, 0.72, pointerSpeed);
+        float wakeAmount = smoothstep(0.035, 0.58, pointerFlowData.z);
+        float recoveryHold = max(interactionAmount, smoothstep(0.02, 0.62, pointerFlowData.w) * 0.78);
+        vec3 interactionForce = uScreenToLocal * vec3(pointerVelocity, 0.0);
         float interactionLength = length(interactionForce);
-        if (interactionLength > 1.1) interactionForce *= 1.1 / interactionLength;
+        if (interactionLength > 1.25) interactionForce *= 1.25 / interactionLength;
 
         float rawMorph = clamp(uMorph, 0.0, 1.0);
         float transitionEnergy = sin(morphProgress(rawMorph) * 3.14159265);
-        vec3 flow = bitangentFlow(particlePosition * 1.12 + seed * 0.31, uTime * (1.0 + seed * 0.55));
+        vec3 ambientFlow = bitangentFlow(particlePosition * 1.12 + seed * 0.31, uTime * (1.0 + seed * 0.55));
 
         // All motion is integrated from force into persistent velocity. Nothing
         // below writes a cursor-derived displacement directly into position.
-        velocity += interactionForce * 1.08 * response * dt;
-        velocity += flow * (0.008 + transitionEnergy * 0.18 + interactionAmount * 0.14) * dt;
-        velocity += -offset * (2.15 + transitionEnergy * 0.45) * dt;
-        velocity *= exp(-(2.15 + transitionEnergy * 0.25) * dt);
+        velocity += interactionForce * 3.8 * response * dt;
+        velocity += ambientFlow * (0.008 + transitionEnergy * 0.18 + interactionAmount * 0.12) * dt;
+        float returnStrength = mix(2.15, 0.45, recoveryHold);
+        float velocityDamping = mix(2.15, 0.92, recoveryHold);
+        velocity += -offset * (returnStrength + transitionEnergy * 0.45) * dt;
+        velocity *= exp(-(velocityDamping + transitionEnergy * 0.25) * dt);
 
         float speed = length(velocity);
-        float maxSpeed = 0.72 + transitionEnergy * 0.18;
+        float maxSpeed = 0.72 + transitionEnergy * 0.18 + interactionAmount * 1.25;
         if (speed > maxSpeed) velocity *= maxSpeed / speed;
         offset += velocity * dt;
 
         float speedMix = 1.0 - exp(-9.5 * dt);
         float filteredSpeed = mix(velocityData.w, length(velocity), speedMix);
-        float excitationDecay = exp(-1.05 * dt);
-        float excitation = max(offsetData.w * excitationDecay, interactionAmount * 0.82 + filteredSpeed * 1.8);
+        float excitationDecay = exp(-1.25 * dt);
+        float excitation = max(
+          offsetData.w * excitationDecay,
+          wakeAmount * (0.16 + seed * 0.30)
+            + min(filteredSpeed * 0.24, wakeAmount * 0.20)
+        );
 
         outOffset = vec4(offset, clamp(excitation, 0.0, 1.0));
         outVelocity = vec4(velocity, filteredSpeed);
@@ -847,7 +970,6 @@ function createParticleSimulation(textureSize, morphGlsl) {
     material: computeMaterial,
     layoutFrom,
     layoutTo,
-    splatStrengths,
     currentTextures: targets[0].textures,
     setLayoutPair(fromLayout, toLayout) {
       writeLayoutTexture(layoutFrom, fromLayout);
@@ -922,6 +1044,8 @@ function bindInteractions() {
   window.addEventListener("keydown", onKeyDown);
   window.addEventListener("pointermove", onPointerMove, { passive: true });
   window.addEventListener("pointerleave", onPointerLeave, { passive: true });
+  window.addEventListener("pointerup", onPointerEnd, { passive: true });
+  window.addEventListener("pointercancel", onPointerEnd, { passive: true });
   window.addEventListener("touchstart", onTouchStart, { passive: true });
   window.addEventListener("touchmove", onTouchMove, { passive: false });
   window.addEventListener("touchend", onTouchEnd, { passive: true });
@@ -988,6 +1112,8 @@ function onKeyDown(event) {
 }
 
 function onPointerMove(event) {
+  if (event.pointerType && event.pointerType !== "mouse") return;
+
   const nextPointer = new THREE.Vector2(
     (event.clientX / window.innerWidth) * 2 - 1,
     -(event.clientY / window.innerHeight) * 2 + 1,
@@ -997,31 +1123,42 @@ function onPointerMove(event) {
   if (!state.pointerHasSample) {
     state.pointerTarget.copy(nextPointer);
     state.pointerSample.copy(nextPointer);
-    state.pointerInputVelocity.set(0, 0);
-    state.pointerVelocity.set(0, 0);
-    state.pointerAcceleration.set(0, 0);
+    state.pointerSpeed = 0;
     state.pointerLastEventAt = eventTime;
-    state.forceTriggerArmed = true;
     state.pointerHasSample = true;
     return;
   }
 
-  const eventDelta = THREE.MathUtils.clamp((eventTime - state.pointerLastEventAt) / 1000, 1 / 120, 0.12);
-  state.pointerDelta.copy(nextPointer).sub(state.pointerTarget);
-  state.pointerInputVelocity.copy(state.pointerDelta).divideScalar(eventDelta);
-  if (state.pointerInputVelocity.lengthSq() > 36) state.pointerInputVelocity.setLength(6);
+  const eventGap = eventTime - state.pointerLastEventAt;
+  const pointerJump = nextPointer.distanceTo(state.pointerTarget);
+  if (eventGap > 150 || pointerJump > 0.6) {
+    state.pointerSample.copy(nextPointer);
+    state.pointerSpeed = 0;
+  } else {
+    const eventDelta = THREE.MathUtils.clamp(eventGap / 1000, 1 / 240, 0.15);
+    const aspect = window.innerWidth / window.innerHeight;
+    const pointerDx = (nextPointer.x - state.pointerTarget.x) * aspect;
+    const pointerDy = nextPointer.y - state.pointerTarget.y;
+    const instantaneousSpeed = Math.hypot(pointerDx, pointerDy) / eventDelta;
+    state.pointerSpeed = THREE.MathUtils.lerp(state.pointerSpeed, instantaneousSpeed, 0.55);
+  }
   state.pointerTarget.copy(nextPointer);
   state.pointerLastEventAt = eventTime;
 }
 
 function onPointerLeave() {
-  state.pointerInputVelocity.set(0, 0);
-  state.pointerVelocity.set(0, 0);
-  state.pointerAcceleration.set(0, 0);
+  resetPointerInput();
+}
+
+function onPointerEnd(event) {
+  if (event.type === "pointercancel" || event.pointerType !== "mouse") resetPointerInput();
+}
+
+function resetPointerInput() {
   state.pointerTarget.set(9, 9);
   state.pointerSample.set(9, 9);
+  state.pointerSpeed = 0;
   state.pointerLastEventAt = 0;
-  state.forceTriggerArmed = true;
   state.pointerHasSample = false;
 }
 
@@ -1127,8 +1264,7 @@ function tick(time) {
   updateScene(sceneIndex, localProgress);
   experience.style.setProperty("--grid-shift", `${state.gridProgress * 68}px`);
 
-  samplePointerForce(time, dt);
-  updateForceSplats(dt);
+  stepPointerFlow(time, dt);
   simulationAccumulator = Math.min(simulationAccumulator + dt, 1 / 20);
   let simulationSteps = 0;
   while (simulationAccumulator >= 1 / 60 && simulationSteps < 3) {
@@ -1143,61 +1279,58 @@ function tick(time) {
   animationFrameId = requestAnimationFrame(tick);
 }
 
-function samplePointerForce(time, dt) {
-  if (!state.pointerHasSample || dt <= 0) return;
+function stepPointerFlow(time, dt) {
+  if (!pointerFlow || dt <= 0) return;
 
-  pointerRawVelocity.copy(state.pointerInputVelocity);
-  const eventAge = time - state.pointerLastEventAt;
-  if (eventAge > 54) {
-    pointerRawVelocity.multiplyScalar(Math.exp(-Math.min(eventAge - 54, 260) / 145));
+  const uniforms = pointerFlow.material.uniforms;
+  let active = 0;
+
+  if (state.pointerHasSample) {
+    pointerFlowStart.set(
+      state.pointerSample.x * 0.5 + 0.5,
+      state.pointerSample.y * 0.5 + 0.5,
+    );
+    pointerFlowEnd.set(
+      state.pointerTarget.x * 0.5 + 0.5,
+      state.pointerTarget.y * 0.5 + 0.5,
+    );
+    pointerFlowDelta.copy(pointerFlowEnd).sub(pointerFlowStart);
+
+    const eventAge = time - state.pointerLastEventAt;
+    const segmentLength = pointerFlowDelta.length();
+    const isContinuousMove = eventAge <= 150 && segmentLength > 0.0002 && segmentLength <= 0.3;
+    const motionEnergy = THREE.MathUtils.smoothstep(state.pointerSpeed, 0.55, 2.5);
+    if (isContinuousMove) active = motionEnergy;
+
+    state.pointerSample.copy(state.pointerTarget);
+  } else {
+    pointerFlowStart.set(0.5, 0.5);
+    pointerFlowEnd.copy(pointerFlowStart);
+    pointerFlowDelta.set(0, 0);
   }
-  if (eventAge > 360) {
-    pointerRawVelocity.set(0, 0);
-    state.pointerInputVelocity.set(0, 0);
-  }
 
-  pointerPreviousVelocity.copy(state.pointerVelocity);
-  state.pointerVelocity.lerp(pointerRawVelocity, 1 - Math.exp(-dt * 5.2));
-  pointerFrameAcceleration.copy(state.pointerVelocity).sub(pointerPreviousVelocity).divideScalar(Math.max(dt, 1 / 120));
-  if (pointerFrameAcceleration.lengthSq() > 1225) pointerFrameAcceleration.setLength(35);
-  state.pointerAcceleration.lerp(pointerFrameAcceleration, 1 - Math.exp(-dt * 4.2));
+  uniforms.tVelocity.value = pointerFlow.targets[pointerFlow.readIndex].texture;
+  uniforms.uDelta.value = Math.min(dt, 1 / 30);
+  uniforms.uAspect.value = window.innerWidth / window.innerHeight;
+  uniforms.uSplatStart.value.copy(pointerFlowStart);
+  uniforms.uSplatEnd.value.copy(pointerFlowEnd);
+  uniforms.uSplatForce.value.set(
+    pointerFlowDelta.x * uniforms.uAspect.value * 35,
+    pointerFlowDelta.y * 35,
+  );
+  uniforms.uSplatActive.value = active;
 
-  const accelerationMagnitude = state.pointerAcceleration.length();
-  const energy = THREE.MathUtils.smoothstep(accelerationMagnitude, 0.45, 5.5);
-  if (energy < 0.035) state.forceTriggerArmed = true;
-  if (state.forceTriggerArmed && energy > 0.08 && time - state.lastSplatAt >= 220) {
-    pointerForceDirection.copy(state.pointerAcceleration).normalize();
-    addForceSplat(state.pointerTarget, pointerForceDirection, energy);
-    state.lastSplatAt = time;
-    state.forceTriggerArmed = false;
-  }
+  const writeIndex = 1 - pointerFlow.readIndex;
+  const previousTarget = renderer.getRenderTarget();
+  const previousAutoClear = renderer.autoClear;
+  renderer.setRenderTarget(pointerFlow.targets[writeIndex]);
+  renderer.autoClear = false;
+  renderer.render(pointerFlow.scene, pointerFlow.camera);
+  renderer.setRenderTarget(previousTarget);
+  renderer.autoClear = previousAutoClear;
 
-  state.pointerSample.copy(state.pointerTarget);
-}
-
-function addForceSplat(center, direction, energy) {
-  const splat = forceSplats[forceSplatCursor];
-  splat.center.copy(center);
-  splat.force.copy(direction).multiplyScalar(0.58 + energy * 0.52);
-  splat.peak = 0.34 + energy * 0.66;
-  splat.strength = 0;
-  splat.age = 0;
-  forceSplatCursor = (forceSplatCursor + 1) % MAX_FORCE_SPLATS;
-}
-
-function updateForceSplats(dt) {
-  forceSplats.forEach((splat, index) => {
-    splat.age += dt;
-    const attack = smooth01(splat.age / 0.52);
-    const release = 1 - smooth01((splat.age - 1.08) / 0.82);
-    splat.strength = splat.peak * attack * release;
-    if (splat.age >= 1.9) {
-      splat.strength = 0;
-      splat.peak = 0;
-      splat.center.set(9, 9);
-    }
-    simulation.splatStrengths[index] = splat.strength;
-  });
+  pointerFlow.readIndex = writeIndex;
+  pointerFlow.currentTexture = pointerFlow.targets[writeIndex].texture;
 }
 
 function stepParticleSimulation(time, dt, localProgress) {
@@ -1216,12 +1349,12 @@ function stepParticleSimulation(time, dt, localProgress) {
   const uniforms = simulation.material.uniforms;
   uniforms.tOffset.value = readTarget.textures[0];
   uniforms.tVelocity.value = readTarget.textures[1];
+  uniforms.tPointerFlow.value = pointerFlow.currentTexture;
   uniforms.uMorph.value = localProgress;
   uniforms.uDelta.value = Math.min(dt, 1 / 30);
   uniforms.uTime.value = time * 0.001;
   uniforms.uMvp.value.copy(simulationMvp);
   uniforms.uScreenToLocal.value.copy(screenToLocal);
-  uniforms.uAspect.value = camera.aspect;
 
   const previousTarget = renderer.getRenderTarget();
   const previousAutoClear = renderer.autoClear;
