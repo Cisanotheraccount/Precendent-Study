@@ -625,11 +625,13 @@ function createParticleField() {
         float wrappedDiffuse = max(0.0, (ndotl + 0.22) / 1.22);
         float macroShadow = 0.2 + vSurfaceLight * 0.8;
         float diffuse = wrappedDiffuse * macroShadow;
-        float specular = pow(max(dot(normal, halfDirection), 0.0), 22.0) * macroShadow;
+        // A broad, low-energy highlight reads as powder-coated/matte rather
+        // than a tight glossy reflection on every particle.
+        float specular = pow(max(dot(normal, halfDirection), 0.0), 10.0) * macroShadow;
         vec3 particleGray = vec3(0.48, 0.53, 0.59);
         vec3 coldLight = vec3(0.78, 0.88, 1.0);
-        float illumination = 0.26 + diffuse * 0.98;
-        vec3 litColor = particleGray * illumination + coldLight * specular * 0.32;
+        float illumination = 0.28 + diffuse * 0.82;
+        vec3 litColor = particleGray * illumination + coldLight * specular * 0.08;
         float excitation = pow(clamp(vInteraction, 0.0, 1.0), 1.35);
         float excitationPulse = 0.68 + vVelocity * 0.48;
         litColor += vec3(0.58, 0.78, 1.0) * excitation * excitationPulse * 0.82;
