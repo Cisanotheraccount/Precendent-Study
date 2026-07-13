@@ -70,7 +70,7 @@ const SCENES = [
     placement: "left",
     layout: "ontology-logo",
     camera: [-0.22, 0.12, 9.7],
-    rotation: [0.04, -0.08, 0],
+    rotation: [0, 0, 0],
     spinMode: "z-only",
     pointScale: 0.72,
     ambientMotion: "specimen",
@@ -1319,6 +1319,7 @@ function updateOntologyOverlay(presence) {
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
   const compact = viewportWidth <= 640;
+  const landscapeColumns = viewportWidth >= 900 && viewportWidth > viewportHeight;
   const margin = compact ? 12 : 24;
   const railClearance = compact ? 70 : 138;
   ontologyLinework.setAttribute("viewBox", `0 0 ${viewportWidth} ${viewportHeight}`);
@@ -1328,6 +1329,15 @@ function updateOntologyOverlay(presence) {
     .applyMatrix4(particlePoints.matrixWorld)
     .project(camera);
   const objectCenterX = (ontologyProjectedCenter.x * 0.5 + 0.5) * viewportWidth;
+  const landscapeHalfWidth = viewportHeight * 0.3;
+  const landscapeLeftGuide = Math.min(
+    viewportWidth / 3,
+    objectCenterX - landscapeHalfWidth - 20,
+  );
+  const landscapeRightGuide = Math.max(
+    viewportWidth * 2 / 3,
+    objectCenterX + landscapeHalfWidth + 20,
+  );
 
   const placements = ontologyCallouts.flatMap((callout) => {
     if (!callout.label || !callout.line || !callout.marker) return [];
@@ -1357,9 +1367,15 @@ function updateOntologyOverlay(presence) {
     );
 
     let labelX = anchorX;
-    if (callout.side === "left") labelX = margin + edgeInset + edgeDrift;
+    if (callout.side === "left") {
+      labelX = landscapeColumns
+        ? landscapeLeftGuide - labelWidth + edgeDrift
+        : margin + edgeInset + edgeDrift;
+    }
     if (callout.side === "right") {
-      labelX = viewportWidth - railClearance - labelWidth - edgeInset + edgeDrift;
+      labelX = landscapeColumns
+        ? landscapeRightGuide + edgeDrift
+        : viewportWidth - railClearance - labelWidth - edgeInset + edgeDrift;
     }
     if (callout.side === "center") labelX -= labelWidth * 0.5;
     let labelY = anchorY + yOffset;
